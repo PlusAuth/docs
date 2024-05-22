@@ -10,11 +10,11 @@ PlusAuth provides its own [CQL](https://wikipedia.org/wiki/Contextual_Query_Lang
 
 Common features and characteristics of PQL are as following:
 
-1.  Consists one or more statements
-2.  Logical connector operators ( `AND`, `OR` )
-3.  Common operators ( `=`, `!=`, `<`, `>`, `<=`, `>=`, `IN` )
-4.  Supports nested properties ( `profile.name`, `metadata.color`, .etc)
-5.  Field grouping ( `profile[given_name = "John" AND family_name = "Doe" ]` )
+1. Consists one or more statements
+2. Logical connector operators ( `AND`, `OR` )
+3. Common operators ( `=`, `!=`, `&lt;`, `>`, `&gt;=`, `>=`, `IN` )
+4. Supports nested properties ( `profile.name`, `metadata.color`, .etc)
+5. Field grouping ( `profile[given_name = "John" AND family_name = "Doe" ]` )
 
 Below, you can find more examples and detailed descriptions of PQL.
 
@@ -29,7 +29,7 @@ For retrieving users whose email is NOT verified, you can use not equal operator
 
     email_verified != true
 
-You can use greater than **\>**, less than **<**, greater or equal **\>=**, less or equal **<=** operators in the same way.
+You can use greater than **\>**, less than **&lt;**, greater or equal **\>=**, less or equal **&lt;=** operators in the same way.
 
 Match value in a list of values
 -------------------------------

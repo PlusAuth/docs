@@ -13,8 +13,8 @@ keywords:
 - Go to created client details and "Connectors" tab
 - Select WS-Fed
 - Enter the following information in the respective fields.
-   - **Realm**: `https://{owa-url}` e.g. https://mail.example.com/owa/
-   - **Application Callback URL**: `https://{owa-url}` e.g. https://mail.example.com/owa/ ![exchange-img_3.png](img/exchange/exchange-img_3.png)
+  - **Realm**: `https://{owa-url}` e.g. https://mail.example.com/owa/
+  - **Application Callback URL**: `https://{owa-url}` e.g. https://mail.example.com/owa/ ![exchange-img_3.png](img/exchange/exchange-img_3.png)
 
 - Click to **Download Certificate** button and save it to your exchange server.
 - Save **Certificate Thumbprint** to somewhere as we will use it in later steps.
