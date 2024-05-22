@@ -1,0 +1,121 @@
+API (Application Programming Interface): >-
+  Farklı yazılım uygulamalarının birbirleriyle
+  iletişim kurmasını ve etkileşimde bulunmasını sağlayan kurallar ve araçlar bütünü.
+Access Token: >-
+  Öncelikli olarak kimliği doğrulanmış bir kullanıcı adına korunan kaynaklara
+  erişmek için kullanılan bir veri parçası. Bu belirteçler, kullanıcı hakkında kimliği
+  ve potansiyel olarak ek talepler gibi bilgileri içerir ve belirli kaynaklara erişim
+  elde etmek için kaynak sunucularına sunulur.
+Authentication: >-
+  Bir kullanıcının kimliğini doğrulama, iddia ettiği kişi olduğundan
+  emin olma süreci.
+Authorization: >-
+  Bir kullanıcıya kimliği doğrulanmış kimliğine dayalı olarak izinlerin
+  veya erişim haklarının verilmesi.
+Financial-grade API (FAPI): >-
+  Finans sektöründe API'lerin güvenliğini ve birlikte çalışabilirliğini
+  artırmak için OpenID Vakfı tarafından geliştirilen bir dizi spesifikasyonu ifade
+  eder. FAPI, API'ler aracılığıyla finansal verilere erişimi ve kullanımı güvence
+  altına almak için standartlaştırılmış bir çerçeve sağlayarak yüksek düzeyde güven
+  ve güvenlik sağlar.
+Hash Algorithm: >-
+  Hash algoritması, girdi verilerini (genellikle rastgele boyutta) alan
+  ve tipik olarak bir hash değeri veya hash kodu olan sabit boyutlu bir karakter dizisi
+  üreten matematiksel bir işlevdir. Bir hash algoritmasının temel özelliği, tek yönlü
+  bir fonksiyon olması gerektiğidir, yani süreci tersine çevirmek ve hash değerinden
+  orijinal girdi verilerini elde etmek hesaplama açısından mümkün olmamalıdır. Hash
+  algoritmaları, bilgisayar bilimlerinde veri bütünlüğü doğrulaması, parola karması
+  ve dijital imzalar dahil olmak üzere çeşitli amaçlar için yaygın olarak kullanılmaktadır.
+Id Token: >-
+  Kimlik Jetonu, kimlik doğrulama işlemi sırasında bir OpenID Connect Sağlayıcısı
+  (OP) tarafından verilen kompakt, dijital olarak imzalanmış bir JSON web belirtecidir
+  (JWT). Kimliği doğrulanmış kullanıcı hakkında, benzersiz tanımlayıcıları ve diğer
+  ilgili talepler gibi kimlik bilgilerini içerir. Kimlik Belirteci, istemci uygulamalarının
+  kullanıcı hakkında doğrulanmış bilgileri alması ve bir kullanıcı kimlik doğrulama
+  akışı bağlamında kimliklerini oluşturması için bir araç görevi görür.
+Identity Provider (IdP): >-
+  Genellikle çoklu oturum açma (SSO) çözümleri için kullanılan,
+  kullanıcı kimliklerini yöneten ve doğrulayan bir hizmet.
+JSON Web Key Set (JWKS): >-
+  Standartlaştırılmış bir biçimde bir dizi kriptografik anahtarı
+  temsil eden bir JSON (JavaScript Object Notation) veri yapısıdır. JWKS, JSON Web
+  Belirteçleri (JWT'ler) ve çeşitli web güvenlik protokolleri bağlamında yaygın olarak
+  kullanılmaktadır.
+Multi Factor Authentication (MFA): >-
+  Kullanıcıların erişim izni vermeden önce birden
+  fazla kimlik biçimi sağlamasını gerektiren bir güvenlik işlemi.
+OAuth 2: >-
+  Yetkilendirme için kullanılan, kaynaklara güvenli ve yetkilendirilmiş erişim
+  sağlayan endüstri standardı bir protokol.
+OpenID Connect: >-
+  OAuth 2.0 protokolünün üzerine inşa edilmiş, uygulamaların kullanıcıların
+  kimliğini doğrulaması için standartlaştırılmış ve güvenli bir yol sağlayan bir kimlik
+  katmanı. Bir kullanıcının bir web sitesinde veya uygulamada oturum açmasına ve ardından
+  kimlik bilgilerini ifşa etmeye gerek kalmadan kimlik bilgilerini diğer web siteleri
+  veya uygulamalarla paylaşmasına olanak tanır. OpenID Connect, çoklu oturum açmayı
+  (SSO) kolaylaştırır ve uygulamaların kullanıcı profili bilgilerini standartlaştırılmış
+  bir biçimde almasını sağlar. Kimlik belirteci (ID belirteci) düzenlemesini içerir,
+  bu da onu merkezi olmayan ve birlikte çalışabilir bir şekilde kullanıcı kimlik doğrulaması
+  ve bilgi paylaşımı için kapsamlı bir çerçeve haline getirir.
+Password Hash Function: >-
+  Parolaların güvenliğini sağlamak için özel olarak tasarlanmış
+  bir tür kriptografik hash işlevi. Bir kullanıcının parolasını girdi olarak alır
+  ve parola karması olarak bilinen sabit boyutlu bir karakter dizisi üretir. Parola
+  karması işlevlerini kullanmanın birincil amacı, saldırganların işlemi tersine çevirmesini
+  ve depolanan karma değerlerinden orijinal parolaları elde etmesini hesaplama açısından
+  zorlaştırarak kullanıcı parolalarını korumaktır. Bu, bir veri ihlali veya yetkisiz
+  erişim durumunda kullanıcı hesaplarının ve hassas bilgilerin güvenliğini artırmaya
+  yardımcı olur.
+Password Policy: >-
+  Kullanıcı hesapları için parola oluşturma ve kullanma kurallarını
+  düzenleyen bir dizi kural ve gereksinim.
+Passwordless Login: >-
+  Kullanıcıların geleneksel bir parola girmeden hesaplarına erişmelerini
+  sağlayan bir kimlik doğrulama yöntemi. Bir parolaya güvenmek yerine, parolasız oturum
+  açma yöntemleri genellikle SMS, E-posta Sihirli Bağlantıları, Biyometri, Anında
+  Bildirim gibi alternatif kimlik doğrulama faktörlerinden yararlanır
+Refresh Token: >-
+  Bir istemci uygulamasının, kullanıcının yeniden kimlik doğrulaması
+  yapmasına gerek kalmadan yeni bir Erişim Belirteci almasına olanak tanıyan uzun
+  ömürlü bir belirteç. Yenileme Belirteçleri, istemcinin orijinal Erişim Belirtecinin
+  süresi dolduktan sonra bile korunan kaynaklara sürekli erişimi sürdürmesini sağlayarak
+  güvenliği ve kullanıcı deneyimini geliştirir.
+Role Based Access Control (RBAC): >-
+  Bir kuruluş içindeki bireysel kullanıcıların rollerine
+  göre sistem erişimini kısıtlayan bir sistem.
+SAML: >-
+  Taraflar arasında, genellikle bir kimlik sağlayıcı (IdP) ve bir hizmet sağlayıcı
+  (SP) arasında kimlik doğrulama ve yetkilendirme verilerinin değiş tokuşu için XML
+  tabanlı bir açık standart. SAML, tek oturum açma (SSO) işlevini etkinleştirerek
+  bir kullanıcının her uygulama için ayrı kimlik bilgilerine ihtiyaç duymadan birden
+  çok uygulamaya erişmek için bir kez oturum açmasına olanak tanır. Kullanıcının kimliği
+  ve kimlik doğrulama durumu hakkında bilgi içeren XML biçimli güvenlik onaylarını
+  değiş tokuş ederek çalışır. SAML, web tabanlı kimlik doğrulama senaryolarında yaygın
+  olarak kullanılır ve birleşik kimlik ortamında birlikte çalışabilirliği ve güvenli
+  bilgi alışverişini teşvik eder.
+Session Management: >-
+  Platforma güvenli ve verimli erişimin sağlanması için kullanıcı
+  oturumlarının kontrolü ve izlenmesi.
+Single Sign-On (SSO): >-
+  Kullanıcıların bir kez kimlik doğrulaması yapmasına ve tekrar
+  oturum açmaya gerek kalmadan birden fazla uygulamaya erişmesine olanak tanıyan bir
+  mekanizma.
+Token: >-
+  Bir kaynağa erişim için kullanıcıya verilen yetkiyi temsil eden veri parçası.
+User Management: >-
+  Kullanıcı profillerinin oluşturulması, silinmesi ve değiştirilmesi
+  dahil olmak üzere kullanıcı hesaplarının yönetimi ve kontrolü.
+WebAuthN: >-
+  World Wide Web Konsorsiyumu (W3C) ve FIDO Alliance tarafından geliştirilen
+  bir web standardı. Kullanıcıların ortak anahtar kriptografisi kullanarak web uygulamalarında
+  kimlik doğrulaması yapmaları için güvenli ve standartlaştırılmış bir yöntem sağlar.
+Web Services Federation (WSFed): >-
+  Web uygulamalarında federasyon kimliği ve çoklu oturum
+  açma (SSO) için kullanılan bir protokol. Web hizmetlerini temel alır ve farklı kuruluşların
+  kullanıcı kimlik doğrulama ve yetkilendirme bilgilerini paylaşmasına olanak tanır.
+  WS-Federation ile, kullanıcı bir web uygulamasında oturum açabilir ve ardından kimlik
+  bilgilerini yeniden girmeye gerek kalmadan federasyon içindeki diğer uygulamalara
+  erişebilir. Bu protokol, XML tabanlı güvenlik belirteçlerine dayanır ve kimlik sağlayıcıları
+  ile hizmet sağlayıcılar arasında güven ilişkileri kurulmasına yardımcı olarak bir
+  federasyon içindeki birden çok web uygulamasında sorunsuz ve güvenli bir kullanıcı
+  deneyimi sağlar.

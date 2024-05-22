@@ -1,0 +1,83 @@
+---
+title: "Views"
+meta_title: "Customize Views"
+meta_description: "PlusAuth is a product provides authorization and authentication solution
+ — in a secure way."
+keywords:
+    - concepts
+    - plusauth
+
+---
+
+PlusAuth lets you customize every view served by it. Go to [Dashboard > Customization > Views](https://dashboard.plusauth.com/#customization/pages).
+
+There is no limitation in views, you can write any HTML/CSS/JS as long as you make the required requests to PlusAuth.
+You can have a look to [Web API](/en/api/web) for the corresponding requests to each page.
+
+
+::alert{type=info}
+Functionality of previews will be limited. For example, you cannot sign in or register from the preview.
+::
+
+## View Context Parameters
+For your business requirements you will need to access to some parameters in views such as authorization parameters,
+client details, connection name, some view related settings etc. PlusAuth provides a context object for such purposes.
+
+You can access to context object from your views by calling `PlusAuth` global object or more specifically `window.PlusAuth`.
+
+Here is an example context object:
+
+```json [Example]
+{
+  "client": {
+    "applicationType": "web",
+    "clientName": "My Client Name",
+    "logoUri": "https://mycdn.example/logo.png",
+    "social": [
+      {
+        "name": "github",
+        "provider": "github",
+        "branding": {
+          "logo_url": "data:image/svg+xml;base64,...",
+          "display_name": "GitHub",
+          "show_in_login": true
+        }
+      },
+      {
+        "name": "google",
+        "provider": "google",
+        "branding": {}
+      }
+    ]
+  },
+  "connection": {
+    "name": "plusauth",
+    "type": "plusauth"
+  },
+  "details": {},
+  "params": {
+    "audience": "uri:my-resource",
+    "client_id": "<<CLIENT_ID>>",
+    "nonce": "<<SOME_RANDOM_VALUE>>",
+    "redirect_uri": "https://myapplication.example/callback",
+    "response_mode": "fragment",
+    "response_type": "code",
+    "scope": "openid profile email scope1 scope2",
+    "state": "<<SOME_RANDOM_VALUE>>"
+  },
+  "prompt": {
+    "name": "login"
+  },
+  "settings": {
+    "auto_sign_in": true,
+    "forgot_password_enabled": true,
+    "password_policy": {
+      "max": 64,
+      "min": 4
+    },
+    "register_enabled": true,
+    "tenant_login_url": "https://myapplication.example/start-login",
+    "welcome_emails_enabled": false
+  }
+}
+```

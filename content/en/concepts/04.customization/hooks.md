@@ -1,0 +1,137 @@
+---
+title: "Hooks"
+meta_title: "Custom Hooks"
+meta_description: "PlusAuth is a product provides authorization and authentication solution
+ — in a secure way."
+keywords:
+  - concepts
+  - plusauth
+  - hooks
+
+---
+
+There will be times you want to modify some flows or you want to apply some logic for some actions. PlusAuth provides
+hooks for you to be able to modify the flow and use your own logic.
+
+::alert{type=info}
+Hooks are executed on a secure sandbox, and they will throw timeout error after **10 seconds**, causing to fail the
+hook.
+::
+
+## Create Hook
+
+Go to [Dashboard > Hooks](https://dashboard.plusauth.com/#hooks). Here you will see a graph with flows located in top.
+After selecting your flow, click to **Add Hook** button from which step you would like to create the hook. You will be
+prompted with a dialog to enter your code and hook's name.
+
+Your hooks characteristics are as following:
+
+- The code must be a valid JavaScript
+- The code must be in ESM format, meaning, you must use `import`, `export` etc.
+- The code must export a function named `handle`
+- `handle` function receives a `data` argument and a callback function as last argument, but it also can be an `async`
+  function.
+- Hooks have `10 seconds` lifetime. After 10 seconds the hook will throw a TimeoutError and will result of failing that
+  hook.
+- You can use any npm package with the prefix of `npm:`. For example, `npm:axios`. Details
+  at [Modules Support](#modules-support)
+- System level operations are not supported. For example, reading/writing files, executing system commands etc.
+
+First argument the handle function receives contains hook context. See **[Hook Context](#hook-context)** for detailed
+information.
+
+Have a look at below for more concrete example:
+
+```js
+export function handle(data, callback) {
+  if (someCondition) {
+    // hook executes successfully
+    callback(null, data)
+  } else {
+    // hook fails with an error
+    callback(new Error('condition failed'))
+  }
+}
+```
+
+Alternatively, you can use promise-like interface like this:
+
+```js
+export async function handle(data) {
+  if (someCondition) {
+    // hook executes successfully
+    return data
+  } else {
+    // hook fails with an error
+    throw new Error('condition failed')
+  }
+}
+```
+
+## Change Order of Hooks
+
+You can create hooks with the same type and their execution order could be somehow important for you. In those cases
+all you need to do is change the order for those hooks. Go to
+[Dashboard > Hooks](https://dashboard.plusauth.com/#hooks), drag and drop the hooks in the same container to change
+their order.
+
+## Modules Support
+
+PlusAuth hooks supports usage of npm modules. You can use any npm modules from [npm registry](https://www.npmjs.com/)
+as long as it works on serverless environment.
+
+A simple usage example:
+```js
+import axios from 'npm:axios@^1'
+
+export async function handle(data) {
+  try {
+    const response = await axios.get('https://httpbin.org/anything');
+    console.log(response.data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+```
+
+::alert{type=warning}
+PlusAuth does not fix external modules versions. It is strongly advised to use fixed versions of packages. If you
+don't include the version, resolved package may change in future and that may or may not cause errors.
+<br>
+<br>
+So instead of using `npm:axios` define its version as `npm:axios@1.6.7`
+::
+
+## Testing Hook
+
+You can test your hook with the **Run** button located on the right sidebar of content editor. It will
+use a test context which contains will be in the same structure as the
+real usage, but it's content will be filled with dummy data.
+
+After you click the **Run** button from the right side of the editor you will see console output
+and resulting context from the console window.
+
+## Hook Context
+
+| key                       | description                                                          |
+|---------------------------|----------------------------------------------------------------------|
+| client                    | Client object that initiated the flow.                               |
+| user                      | PlusAuth user object.                                                |
+| context.externalUser      | External user object retrieved from external connection such as LDAP |
+| context.connection        | Current connection name                                              |
+| context.request.query     | Query parameters for initiated request                               |
+| context.request.body      | Request body for initiated request                                   |
+| context.request.headers   | Request headers for initiated request                                |
+| context.request.userAgent | UserAgent for initiated request                                      |
+| context.request.ip        | IP of incoming request                                               |
+| context.response.body     | Response body object                                                 |
+| context.response.headers  | Headers which will be sent                                           |
+| context.authParams        | Authorization related params.                                        |
+| context.accessToken       | Generated access token.                                              |
+| context.idToken           | Generated id token.                                                  |
+| context.mfa               | MFA related actions.                                                 |
+
+::alert{type=warning}
+Some of the properties listed above could be `undefined` or `null` in some hook types or flows.
+Make sure to handle cases for them being undefined in your hook code.
+::

@@ -1,0 +1,81 @@
+---
+title: "Clients"
+meta_title: "PlusAuth Clients"
+meta_description: "PlusAuth is a product provides authorization and authentication solution in a secure way."
+keywords:
+- concepts
+- plusauth
+- clients
+- applications
+- web-app
+- native app
+- financial app
+- single page app
+- spa
+
+---
+
+PlusAuth could be used with different type applications such as single page application, regular web applications,
+IoT applications, financial services, mobile applications etc.
+
+The term **Client** in PlusAuth refers to the application that is attempting to get access to the user's account.
+For that reason, for each application you must define a client in PlusAuth.
+
+You can manage your clients from [Dashboard > Clients](https://dashboard.plusauth.com/#clients).
+
+## Client Types
+Client types are helpers for defining an initial configuration and includes additional security layers
+differs from each other depending on their types.
+
+In this section, we will describe common properties of clients.
+
+## Client Metadata
+
+- **Client Name**[](#client-name): Name of your client, could be anything. You can change it anytime. It could be used in all customizable entities such as emails and views.
+
+- **Client Description**[](#client-description): You may need additional description for your client, this field helps for that need
+
+- **Client ID**[](#client-id): Unique identifier of your client. This value is generated automatically by PlusAuth, and it will be
+required for almost every operation related to authentication or authorization.
+
+- **Client Secret**[](#client-secret): This value must be kept confidential. Think of it as a user's password. Developers must use this value in public
+applications such as single page and native applications.
+
+- **Logo URI**[](#logo-uri): Link for your application logo. It could be used in views or emails. It is advised to use small sized logos.
+
+- **Policy URI**[](#policy-uri): Link for your application policy document. It could be used in views or emails.
+
+- **Terms of Service URI**[](#terms-of-service-uri): Link for your application's terms of service document. It could be used in views or emails.
+
+- **Redirect URIs**[](#redirect-uris): After a user successfully logs in or authorizes your application, the authorization server will redirect the
+user back to the application with either an authorization code or access token in the URL. Because the redirect URL will contain sensitive
+information, it is critical that these URIs must belong to your application.
+
+- **Post Logout Redirect URIs**[](#post-logout-redirect-uris): After user's logs out from your application you can define a URI to redirect
+back. If no post logout uri used in logout request, PlusAuth will show a simple page informing user about logout process.
+
+- **Grant Types**[](#grant-types): To request an access token, the client obtains authorization from the
+resource owner. The authorization is expressed in the form of an
+authorization grant, which the client uses to request the access
+token. At this time PlusAuth supports these grant types: **authorization code**, **implicit**,
+**client credentials**, **refresh_token**. Each grant type resolves to different flow and may require additional steps.
+We will describe them in the Authorization Grant Types section.
+
+- **Token Endpoint Authentication Method**[](#token-authorization-method): This field defines how the token endpoint should authenticate incoming request. Here is list of available values:
+- **None**: Indicates that client authentication will occur. This is for applications does not use any client secret
+- **Post**: Indicates that client authentication will occur by checking client assertion in request body
+- **Basic**: Indicates that client authentication will occur by HTTP Basic Authentication scheme
+- **JWT**: Indicates that client authentication will occur by using a JWT containing client secret.
+- **Private Key JWT**: Indicates that client authentication will occur by using a JWT containing client secret and signed by registered public key.
+- **TLS**: Indicates that client authentication will occur with mutual TLS utilizing the PKI method of associating a certificate to a client.
+- **Self Signed TLS**: Indicates that client authentication will occur using mutual TLS with the client utilizing a self-signed certificate.
+
+- **First Party**[](#first-party): Mark the client as first party to skip user consent. All clients created from dashboard or rest api marked as first party by default. If this is false user's will face with consent screen and limited scopes will be included in id token.
+
+- **OpenID Conformance**[](#first-party): If this is enabled generated id\_tokens and refresh\_tokens will only have `openid` as scope when the response\_type is not `id_token`.
+
+- **Extra Metadata**[](#first-party): Additional metadata to be stored with your client. This is an object and can contain up to **10 keys** with string values limited to up to **256 characters**.
+
+- **FAPI Conformance Profile**[](#fapi-rw-enabled): If this value is `true` client properties will be validated according OpenID Financial-grade API (FAPI) Conformance requirements.
+
+- **JWKS**[](#jwks): Client specific JSON Web Key Set to be used in signature and encryption processes.

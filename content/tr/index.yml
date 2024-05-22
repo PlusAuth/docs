@@ -1,0 +1,64 @@
+toolsCards:
+  - title: Keşfet & Öğren
+    icon: 'i-solar-card-search-bold-duotone'
+    iconColor: 'text-violet-500'
+    to: '/concepts'
+    description: >-
+      PlusAuth yetenekleri ve kavramlar hakkında bilgi edinin
+
+  - title: Hızlı Başlangıç
+    icon: 'i-solar-rocket-2-bold-duotone'
+    iconColor: 'text-blue-500'
+    to: '/quick-starts'
+    description: >-
+      PlusAuth'u birkaç dakika içinde kullanmaya başlayın
+
+  - title: Öğreticiler
+    icon: 'i-ph-graduation-cap-duotone'
+    iconColor: 'text-indigo-500'
+    to: '/tutorials'
+    description: >-
+      PlusAuth'u harici araçlarla entegre etmek için öğretici kaynaklar
+
+  - title: API Dökümantasyonları
+    icon: 'i-solar-code-square-bold-duotone'
+    iconColor: 'text-amber-500'
+    to: '/api'
+    description: >-
+      API Uç Noktalarının detaylı dökümantasyonu
+
+  - title: Değişiklik Listesi
+    icon: 'i-solar-sort-by-time-line-duotone'
+    iconColor: 'text-blue-600'
+    to: '/changelog'
+    description: >-
+      Her sürümde neleri değiştirdiğimize dair ayrıntılı açıklamalar
+
+  - title: Sözlük
+    icon: 'i-solar-book-bookmark-bold-duotone'
+    iconColor: 'text-sky-600'
+    to: '/glossary'
+    description: >-
+      Anahtar terimlerin ve tanımlarının listesi
+
+  - title: Blog
+    icon: 'i-solar-list-heart-minimalistic-line-duotone'
+    iconColor: 'text-red-400'
+    to: 'https://plusauth.com/blog'
+    description: >-
+      Çeşitli makaleler ve içerikler
+
+  - title: Forum
+    icon: 'i-solar-chat-square-check-line-duotone'
+    iconColor: 'text-emerald-500'
+    to: 'https://forum.plusauth.com'
+    description: >-
+      Yardıma ihtiyacınız olursa burası en doğru yer
+
+
+  - title: Hizmet Durumu
+    icon: 'i-heroicons-signal'
+    iconColor: 'text-indigo-800'
+    to: 'https://status.plusauth.com'
+    description: >-
+      PlusAuth hizmetlerinin durumu

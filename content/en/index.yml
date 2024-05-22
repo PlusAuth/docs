@@ -1,0 +1,64 @@
+toolsCards:
+  - title: Discover & Learn
+    icon: 'i-solar-card-search-bold-duotone'
+    iconColor: 'text-violet-500'
+    to: '/concepts'
+    description: >-
+      Learn about PlusAuth abilities and internal concepts
+
+  - title: Quick Start
+    icon: 'i-solar-rocket-2-bold-duotone'
+    iconColor: 'text-blue-500'
+    to: '/quick-starts'
+    description: >-
+      Get started using PlusAuth in a few minutes
+
+  - title: Tutorials
+    icon: 'i-ph-graduation-cap-duotone'
+    iconColor: 'text-indigo-500'
+    to: '/tutorials'
+    description: >-
+      Tutorials for integrating PlusAuth with external tools
+
+  - title: API Reference
+    icon: 'i-solar-code-square-bold-duotone'
+    iconColor: 'text-amber-500'
+    to: '/api'
+    description: >-
+      A full reference of API Endpoints
+
+  - title: Changelog
+    icon: 'i-solar-sort-by-time-line-duotone'
+    iconColor: 'text-blue-600'
+    to: '/changelog'
+    description: >-
+      Detailed descriptions of what we have changed in every release
+
+  - title: Glossary
+    icon: 'i-solar-book-bookmark-bold-duotone'
+    iconColor: 'text-sky-600'
+    to: '/glossary'
+    description: >-
+      List of key terms and their definitions
+
+  - title: Blog
+    icon: 'i-solar-list-heart-minimalistic-line-duotone'
+    iconColor: 'text-red-400'
+    to: 'https://plusauth.com/blog'
+    description: >-
+      Various articles and content
+
+  - title: Forum
+    icon: 'i-solar-chat-square-check-line-duotone'
+    iconColor: 'text-emerald-500'
+    to: 'https://forum.plusauth.com'
+    description: >-
+      If you need any help this is the right place
+
+
+  - title: Service Status
+    icon: 'i-heroicons-signal'
+    iconColor: 'text-indigo-800'
+    to: 'https://status.plusauth.com'
+    description: >-
+      Status of PlusAuth services

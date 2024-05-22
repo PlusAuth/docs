@@ -1,0 +1,280 @@
+---
+title: Python Flask Tutorial
+description: This tutorial demonstrates how to add user login, logout, and profile to a Python Flask application.
+topics:
+- quickstarts
+- webapp
+- login
+- user profile
+- logout
+- python
+- python3
+- flask
+contentType: tutorial
+useCase: quickstart
+type: web
+icon: i-devicon-flask
+label: Flask
+---
+This tutorial shows how to use PlusAuth with Python and Flask. If you do not have a PlusAuth account, register from [here](https://dashboard.plusauth.com).
+
+::alert{type=info}
+This tutorial follows [plusauth-python-starter](https://github.com/PlusAuth/plusauth-python-starter) sample project on Github. You can download and follow the tutorial via the sample project.
+::
+
+## Create PlusAuth Client
+
+After you sign up or log in to PlusAuth, you need to create a client to get the necessary configuration keys in the dashboard.
+Go to [Clients](https://dashboard.plusauth.com/~clients) and create a client with the type of `Regular Web Application`
+
+
+## Configure Client
+### Get Client Properties
+
+You will need your `Client Id` and `Client Secret` for interacting with PlusAuth. You can retrieve them from the created client's details.
+
+### Configure Redirect and Logout URIs
+When PlusAuth authenticates a user, it needs a URI to redirect back. That URI must be in your client's `Redirect URI` 
+list. If your application uses a redirect URI that is not white-listed in your PlusAuth Client, you will receive an error.
+
+The same thing applies to the logout URIs. After the user logs out, you need a URI to be redirected.
+
+::alert{type=info}
+
+If you are following the sample project, the Redirect URL you need to add to the Redirect URIs field is *`http://localhost:3000/login/callback`* and 
+the Logout URL you need to add to the Post Logout Redirect URIs field is *`http://localhost:3000/logout`*.
+::
+
+## Configure Flask to use PlusAuth
+
+Create a Python application or download the sample project from the link on the top of the page.
+
+### Create the .env file
+
+Create the `.env` file in the root of your app and add your PlusAuth variables and values to it.
+
+```properties
+# .env
+AUTH_URL=https://{YOUR-TENANT-NAME}.plusauth.com
+CLIENT_ID={YOUR-CLIENT-ID}
+CLIENT_SECRET={YOUR-CLIENT-SECRET}
+```
+
+::alert{type=warning}
+Do not put the `.env` file into source control. Otherwise, your history will contain references to your client's secret.
+If you are using git, create a `.gitignore` file (or edit your existing one, if you have one already) and add `.env` to it. The `.gitignore` file tells source control to ignore the files (or file patterns) you list. Be careful to add `.env` to your `.gitignore` file and commit that change before you add your `.env`
+::
+
+```properties
+# .gitignore
+.env
+```
+
+::alert{type=info}
+
+If you are following the sample project, rename `.env.example` to `.env` and replace the values accordingly.
+::
+
+### Add Requirements
+
+To get started, install the following requirements.
+```txt
+# requirements.txt
+
+flask ~= 1.1.2
+flask_pyoidc ~= 3.4.0
+python-dotenv ~= 0.13.0 
+```
+
+Install the requirements using `pip3`.
+```bash
+# installation with pip3
+pip3 install -r requirements.txt
+```
+
+## Implement login, user profile, and logout
+
+### Configure OIDC Client
+
+To enable authentication with PlusAuth, create `index.py` at the root of your project. Then configure `flask_pyoidc` and create an `auth` object.
+
+```python
+# index.py
+
+from os import environ as env
+from flask import Flask, jsonify, render_template, redirect, session
+from flask_pyoidc import OIDCAuthentication
+from flask_pyoidc.provider_configuration import ProviderConfiguration, ClientMetadata
+from flask_pyoidc.user_session import UserSession
+from dotenv import load_dotenv
+
+load_dotenv() # Load environment variables
+
+app = Flask(__name__)
+app.config.update(
+    OIDC_REDIRECT_URI = 'http://localhost:3000/login/callback',
+    SECRET_KEY = 'SessionSecretKey' # flask_pyoidc extension relies on Flask sessions, which requires SECRET_KEY
+)
+
+client_metadata = ClientMetadata(
+    client_id=env.get("CLIENT_ID"),
+    client_secret=env.get("CLIENT_SECRET"))
+auth_params = {'scope': ['openid', 'profile', 'email']}
+# Create auth config
+config = ProviderConfiguration(
+    issuer=env.get("AUTH_URL"),
+    client_metadata=client_metadata,
+    auth_request_params=auth_params)
+
+auth = OIDCAuthentication({'default': config}, app)
+```
+
+You may have noticed that the values defined in [Configure Client](#configure-client) section are used here. If you have used different 
+values make sure to update this file accordingly.
+
+### Add the Routes
+
+Add routes to your application to serve HTML.
+
+```python
+# index.py
+
+@app.route('/login')
+@auth.oidc_auth('default')
+def login():
+    return redirect('/')
+
+# Post Logout URL
+@app.route('/logout')
+@auth.oidc_logout
+def logout():
+    return redirect('/')
+
+@auth.error_view
+def error(error=None, error_description=None):
+    return jsonify({'error': error, 'message': error_description})
+
+@app.route('/')
+def index():
+    user_session = UserSession(session, 'default')
+    return render_template('index.html', user=user_session.userinfo)
+
+@app.route('/profile')
+@auth.oidc_auth('default')
+def profile():
+    user_session = UserSession(session, 'default')
+    return render_template('profile.html', user=user_session.userinfo)
+
+if __name__ == '__main__':
+    app.run(debug=True, port=3000)
+```
+
+We defined the routes of our views above. `@auth.oidc_auth` annotation in the metadata will ensure those routes are accessible only by authenticated users.
+
+### Create HTML Pages
+
+### Main Layout
+Create *`main.html`* under the `templates` folder.
+
+```html
+<!-- templates/main.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <title>Plusauth Starter Template</title>
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+      integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk"
+      crossorigin="anonymous"
+    />
+  </head>
+  <body>
+    <style>
+      body {
+        padding-top: 5rem;
+      }
+    </style>
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+      <a class="navbar-brand" href="/">Plusauth Starter</a>
+      <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+        <ul class="navbar-nav mr-auto"></ul>
+        {% if(user) %}
+        <li class="nav-item navbar-nav">
+          <a class="nav-link" href="/profile">
+            Logged in as: {{ user.username }}
+          </a>
+        </li>
+        <a class="nav-link" href="/logout"> Logout </a>
+        {% else %}
+        <li class="nav-item navbar-nav">
+          <a class="nav-link" href="/login"> Login </a>
+        </li>
+        {% endif %}
+      </div>
+    </nav>
+    <main role="main" class="container">{% block content %}{% endblock %}</main>
+  </body>
+</html>
+```
+### Homepage
+Create *`index.html`* under `templates` folder.
+
+```html
+<!-- templates/index.html -->
+
+{% extends 'main.html' %} {% block content %}
+<div class="jumbotron">
+  <div class="container">
+    <h1 class="display-3">Hello, world!</h1>
+    <p>
+      This is a template for a simple login/register system. It includes a
+      simple OpenID Connect Authorization Code Flow. To view Profile page please
+      login.
+    </p>
+    <p>
+      {% if(user) %}
+      <a class="btn btn-success btn-lg" href="/profile" role="button"
+        >View Profile &raquo;</a
+      >
+      {% else %}
+      <a class="btn btn-primary btn-lg" href="/login" role="button"
+        >Login/Register &raquo;</a
+      >
+      {% endif %}
+    </p>
+    <p></p>
+  </div>
+</div>
+{% endblock %}
+```
+
+::alert{type=warning}
+Login button redirects to `/login/callback` that is provided by `flask_pyoidc`. It will redirect to the PlusAuth login page. After successful login, PlusAuth redirects back to the same endpoint to create 
+and store the session.
+::
+
+### User Profile
+Create *`profile.html`* under `templates` folder.
+
+```html
+<!-- templates/profile.html -->
+
+{% extends 'main.html' %} {% block content %}
+<div class="container">
+  <h3>Welcome {{ user.email }}!</h3>
+  <h4>User object:</h4>
+  <pre>{{ user|tojson(indent=2)  }}</pre>
+</div>
+{% endblock %}
+```
+
+## See it in action
+
+That's it. Start your app and point your browser to [http://localhost:3000](http://localhost:3000). Follow the **Log In** link to log in or sign up to your PlusAuth tenant. Upon successful login or signup, you should be redirected back to the application.

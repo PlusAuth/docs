@@ -1,0 +1,112 @@
+---
+title: Query Syntax
+---
+
+<article class="grid lg:grid-cols-2 gap-12">
+    <section>
+        <h1>PlusAuth Query Language Reference</h1>
+
+PlusAuth provides its own [CQL](https://wikipedia.org/wiki/Contextual_Query_Language) for querying over resources in an easy way. It will be referred as **PQL (PlusAuth Query Language)** in PlusAuth documentation.
+
+Common features and characteristics of PQL are as following:
+
+1.  Consists one or more statements
+2.  Logical connector operators ( `AND`, `OR` )
+3.  Common operators ( `=`, `!=`, `<`, `>`, `<=`, `>=`, `IN` )
+4.  Supports nested properties ( `profile.name`, `metadata.color`, .etc)
+5.  Field grouping ( `profile[given_name = "John" AND family_name = "Doe" ]` )
+
+Below, you can find more examples and detailed descriptions of PQL.
+
+Common operators
+----------------
+
+You can check equality, greatness and matching value in a list of values. Here is a sample query for retrieving users whose email is verified.
+
+    email_verified = true
+
+For retrieving users whose email is NOT verified, you can use not equal operator
+
+    email_verified != true
+
+You can use greater than **\>**, less than **<**, greater or equal **\>=**, less or equal **<=** operators in the same way.
+
+Match value in a list of values
+-------------------------------
+
+For checking value from a defined list of values PQL provides **IN** operator. You can provide list of values being separated by commas.
+
+    profile.given_name IN "John","Jane"
+
+The query above will retrieve users whose given name is either "John" or "Jane"
+
+Logical operators
+-----------------
+
+In some cases you may need to have more than one condition to apply for retrieving your resources. You can use **AND**,**OR** for this purpose.
+
+Let's retrieve users whose email is "johndoe@johndoe.club" or whose email is not verified. Here is the query:
+
+    email = "johndoe@johndoe.club" OR email_verified != true
+
+You can also group statements. Just wrap your condition with parentheses. Here is an example:
+
+    (profile.given_name = "Jane" AND profile.family_name != "Doe") OR email_verified = true
+
+</section>
+<section>
+  <div class="card">
+    <div class="card-title">
+        PQL Operators
+    </div>
+    <div class="overflow-x-auto">
+      <table class="border-none text-tiny my-0">
+        <thead>
+        <tr>
+            <th class="py-2 text-center">Operator</th>
+            <th class="py-2 text-left">Description</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td class=" text-center font-bold py-2">=</td>
+            <td class="py-2">Equal</td>
+        </tr>
+        <tr>
+            <td class=" text-center font-bold py-2">!=</td>
+            <td class="py-2">Not equal</td>
+        </tr>
+        <tr>
+            <td class=" text-center font-bold py-2">&lt;</td>
+            <td class="py-2">Less than</td>
+        </tr>
+        <tr>
+            <td class=" text-center font-bold py-2">&gt;</td>
+            <td class="py-2">Greater than</td>
+        </tr>
+        <tr>
+            <td class=" text-center font-bold py-2">&lt;=</td>
+            <td class="py-2">Less than or equal</td>
+        </tr>
+        <tr>
+            <td class=" text-center font-bold py-2">&gt;=</td>
+            <td class="py-2">Greater than or equal</td>
+        </tr>
+        <tr>
+            <td class=" text-center font-bold py-2">AND</td>
+            <td class="py-2">Checks if all the statements separated by it are true</td>
+        </tr>
+        <tr>
+            <td class=" text-center font-bold py-2">OR</td>
+            <td class="py-2">Checks if any of the statements separated by it are true</td>
+        </tr>
+        <tr>
+            <td class=" text-center font-bold py-2">IN</td>
+            <td class="py-2">Matches value in a list of values</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+</article>

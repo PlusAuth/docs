@@ -1,0 +1,315 @@
+---
+title: Java Spring Boot Tutorial
+description: This tutorial demonstrates how to add user login, logout, and profile to a Java Spring Boot application.
+topics:
+- quickstarts
+- webapp
+- login
+- user profile
+- logout
+- java
+- spring boot
+contentType: tutorial
+useCase: quickstart
+type: web
+icon: i-devicon-spring
+label: Spring Boot
+---
+This tutorial shows how to use PlusAuth with Spring Boot and Spring Security. If you do not have a PlusAuth account, register from [here](https://dashboard.plusauth.com).
+
+::alert{type=info}
+This tutorial follows [plusauth-spring-starter](https://github.com/PlusAuth/plusauth-spring-starter) sample project on Github. You can download and follow the tutorial via the sample project.
+::
+
+## Create PlusAuth Client
+
+After you sign up or log in to PlusAuth, you need to create a client to get the necessary configuration keys in the dashboard.
+Go to [Clients](https://dashboard.plusauth.com/~clients) and create a client with the type of `Regular Web Application`
+
+
+## Configure Client
+### Get Client Properties
+
+You will need your `Client Id` and `Client Secret` for interacting with PlusAuth. You can retrieve them from the created client's details.
+
+### Configure Redirect and Logout URIs
+When PlusAuth authenticates a user, it needs a URI to redirect back. That URI must be in your client's `Redirect URI` 
+list. If your application uses a redirect URI that is not white-listed in your PlusAuth Client, you will receive an error.
+
+The same thing applies to the logout URIs. After the user logs out, you need a URI to be redirected.
+
+::alert{type=info}
+
+If you are following the sample project, the Redirect URL you need to add to the Redirect URIs field is *`http://localhost:8080/login/oauth2/code/plusauth`* and 
+the Logout URL you need to add to the Post Logout Redirect URIs field is *`http://localhost:8080/`*.
+::
+
+## Configure Spring Boot to use PlusAuth
+Create a Spring Boot application or download the sample project from the link on the top of the page. The sample project uses `thymeleaf` for the view layer.
+
+### Add Dependencies
+
+* If using Gradle
+
+```groovy
+implementation 'org.springframework.boot:spring-boot-starter-web'
+implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+implementation 'org.springframework.boot:spring-boot-devtools'
+```
+
+* If using Maven
+
+```xml
+<dependencies>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-oauth2-client</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-thymeleaf</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-devtools</artifactId>
+        <scope>runtime</scope>
+        <optional>true</optional>
+    </dependency>
+</dependencies>
+```
+
+::alert{type=info}
+
+`spring-boot-starter-oauth2-client` provides all Spring Security dependencies to add authentication 
+::
+
+### Configure Spring Security
+
+The sample uses `application.yml` file to add Oauth2 client secrets and issuer. Other configuration mechanisms like `application.properties` are also supported.
+
+
+```yml
+#src/main/resources/application.yml
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          plusauth:
+            client-id: {YOUR-CLIENT-ID}
+            client-secret: {YOUR-CLIENT-SECRET}
+            scope:
+              - openid
+              - email
+              - profile
+        provider:
+          plusauth:
+            issuer-uri: https://{YOUR-TENANT-NAME}.plusauth.com/
+```
+
+::alert{type=warning}
+ Change `client-id` and `client-secret` fields with your client's data which you created earlier. 
+ Spring Security fetches all the information from `issuer-uri`. Put your tenant name to Issuer Uri like `https://example.plusauth.com`
+::
+
+## Implement login, user profile, and logout
+
+To enable authentication with PlusAuth, add Security Config Adapter by extending `WebSecurityConfigurerAdapter` provided by Spring Security.
+
+### Add OIDCSecurityConfig Adapter 
+
+In the `configure`, add authentication to your app using `oauth2Login` method. Add authentication all the routes except `/` route that is the index path. After successful login, 
+Spring Boot creates a new session that has authenticated user info. 
+
+`WebSecurityConfigurerAdapter` also provides a way to log out from a session using `logoutSuccessHandler` method. When the user logout,
+the application redirects to the PlusAuth logout endpoint and redirect back to `Post Logout Redirect Uri`.
+
+```java
+// com/plusauth/starter/config/OIDCSecurityConfig.java
+
+@Configuration
+@EnableWebSecurity
+public class OIDCSecurityConfig extends WebSecurityConfigurerAdapter {
+
+    @Autowired
+    private ClientRegistrationRepository clientRegistrationRepository;
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http.authorizeRequests()
+            // allow anonymous access to the root page
+            .antMatchers("/").permitAll()
+            .anyRequest().authenticated()
+            // RP-initiated logout
+            .and().logout().logoutSuccessHandler(oidcLogoutSuccessHandler())
+            // enable OAuth2/OIDC
+            .and().oauth2Login(Customizer.withDefaults())
+            .csrf().disable();
+    }
+
+     private LogoutSuccessHandler oidcLogoutSuccessHandler() {
+        OidcClientInitiatedLogoutSuccessHandler oidcLogoutSuccessHandler = new OidcClientInitiatedLogoutSuccessHandler(this.clientRegistrationRepository);
+        // Sets the location that the End-User's User Agent will be redirected to
+        // after the logout has been performed at the Provider
+        oidcLogoutSuccessHandler.setPostLogoutRedirectUri("http://localhost:8080/"); // Application URL
+        return oidcLogoutSuccessHandler;
+    }
+}
+```
+
+### Add the Controller
+
+Add a Controller to your application to serve HTML. In the controller, add authenticated user's profile information to the model.
+
+```java
+// com/plusauth/starter/web/home/MainController.java
+
+@Controller
+public class MainController {
+
+    @RequestMapping(value = "/", method = RequestMethod.GET)
+    public String getIndex(Model model, @AuthenticationPrincipal OidcUser principal) {
+        if (principal != null) { // If user logged in
+            model.addAttribute("user", principal.getUserInfo());
+        }
+        // serve index.html
+        return "index";
+    }
+
+    @RequestMapping(value = "/profile", method = RequestMethod.GET)
+    public String getProfile(Model model, @AuthenticationPrincipal OidcUser principal) {
+        OidcUserInfo user = principal.getUserInfo();
+
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode userJson = mapper.convertValue(user, JsonNode.class);
+
+        model.addAttribute("user", user);
+        model.addAttribute("userPrettified", userJson.toPrettyString());
+        // serve profile.html
+        return "profile";
+    }
+}
+```
+### Create HTML Pages
+
+### Fragments
+Create *`header.html`* under `main/resources/templates/fragments` folder.
+
+```html
+<!-- main/resources/templates/fragments/header.html -->
+
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <head th:fragment="header">
+      <meta charset="utf-8"/>
+      <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport" />
+      <title>Plusauth Starter Template</title>
+      <link crossorigin="anonymous" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+              integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" rel="stylesheet" />
+  </head>
+</html>
+```
+
+Create *`navbar.html`* under `main/resources/templates/fragments` folder.
+
+```html
+<!-- main/resources/templates/fragments/navbar.html -->
+
+<html xmlns:th="http://www.thymeleaf.org">
+  <div class="nav-container" th:fragment="navbar">
+      <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+          <a class="navbar-brand" href="/">Plusauth Starter</a>
+          <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+              <ul class="navbar-nav mr-auto"></ul>
+              <th:block th:if="${user} != null">
+              <li class="nav-item navbar-nav">
+                  <a class="nav-link" href="/profile">
+                      Logged in as: <span th:text="${user.email}"></span>
+                  </a>
+              </li>
+                  <li class="nav-item navbar-nav">
+                  <form action="/logout" method="post">
+                      <button type="submit" class="btn btn-text nav-link" role="button">
+                          Logout
+                      </button>
+                  </form>
+                  </li>
+              </th:block>
+              <li th:if="${user} == null" class="nav-item navbar-nav">
+                  <a class="nav-link" href="/oauth2/authorization/plusauth">
+                      Login
+                  </a>
+              </li>
+          </div>
+      </nav>
+  </div>
+</html>
+```
+
+### Homepage
+Create *`index.html`* under `main/resources/templates` folder.
+
+```html
+<!-- main/resources/templates/index.html -->
+
+<html xmlns:th="http://www.thymeleaf.org">
+  <head th:replace="fragments/header :: header"></head>
+  <body>
+    <div th:replace="fragments/navbar :: navbar"></div>
+    <div class="jumbotron">
+        <div class="container">
+            <h1 class="display-3">Hello, world!</h1>
+            <p>
+                This is a template for a simple login/register system. It includes a
+                simple OpenID Connect Implicit Flow. To view Profile page please login.
+            </p>
+            <p>
+                <a th:if="${user} != null" class="btn btn-success btn-lg" href="/profile" role="button">
+                  View Profile &raquo;
+                </a>
+                <a th:if="${user} == null" class="btn btn-primary btn-lg" href="/oauth2/authorization/plusauth" role="button">
+                  Login/Register &raquo;
+                </a>
+            </p>
+            <p></p>
+        </div>
+    </div>
+  </body>
+</html>
+```
+
+::alert{type=info}
+
+ If a user is unauthenticated, then the *`Login`* button will be shown, else the *`View Profile`* button is. 
+::
+
+::alert{type=warning}
+Login button redirects to `/oauth2/authorization/plusauth` endpoint which is provided by Spring Security. It will redirect to the PlusAuth login page. After successful login, PlusAuth redirects back to the same endpoint to create and store the session.
+::
+
+### User Profile
+Create *`profile.html`* under `main/resources/templates` folder.
+
+```html
+<!-- main/resources/templates/profile.html -->
+
+<html xmlns:th="http://www.thymeleaf.org">
+  <head th:replace="fragments/header :: header"></head>
+    <body>
+    <div th:replace="fragments/navbar :: navbar"></div>
+    <div class="container">
+        <h3>Welcome <span th:text="${user.email}"></span></h3>
+        <h4>User object:</h4>
+        <pre th:text="${userPrettified}"></pre>
+    </div>
+  </body>
+</html>
+```
+
+## See it in action
+
+That's it. Start your app and point your browser to [http://localhost:8080](http://localhost:8080). Follow the **Log In** link to log in or sign up to your PlusAuth tenant. Upon successful login or signup, you should be redirected back to the application.

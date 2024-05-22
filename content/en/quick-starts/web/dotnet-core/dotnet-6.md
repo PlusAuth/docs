@@ -1,0 +1,349 @@
+---
+title: ASP.NET Core 6.0 Tutorial
+description: This tutorial demonstrates how to add user login, logout, and profile to an ASP.NET Core application.
+topics:
+- quickstarts
+- webapp
+- login
+- user profile
+- logout
+- csharp
+- asp.net
+- asp.net core
+- asp.net core 6.0
+contentType: tutorial
+useCase: quickstart
+type: web
+icon: i-devicon-dotnetcore
+label: ASP.NET Core
+---
+This tutorial shows how to use PlusAuth with ASP.NET Core and `Microsoft OpenIdConnect`. If you do not have a PlusAuth account, register from [here](https://dashboard.plusauth.com).
+
+::alert{type=info}
+This tutorial follows [plusauth-dotnet-starter](https://github.com/PlusAuth/plusauth-dotnet-starter) sample project on Github. You can download and follow the tutorial via the sample project.
+::
+
+## Create PlusAuth Client
+
+After you sign up or log in to PlusAuth, you need to create a client to get the necessary configuration keys in the dashboard.
+Go to [Clients](https://dashboard.plusauth.com/~clients) and create a client with the type of `Regular Web Application`
+
+
+## Configure Client
+### Get Client Properties
+
+You will need your `Client Id` and `Client Secret` for interacting with PlusAuth. You can retrieve them from the created client's details.
+
+### Configure Redirect and Logout URIs
+When PlusAuth authenticates a user, it needs a URI to redirect back. That URI must be in your client's `Redirect URI` 
+list. If your application uses a redirect URI that is not white-listed in your PlusAuth Client, you will receive an error.
+
+The same thing applies to the logout URIs. After the user logs out, you need a URI to be redirected.
+
+::alert{type=info}
+
+If you are following the sample project, the Redirect URL you need to add to the Redirect URIs field is *`https://localhost:7200/callback`* and 
+the Logout URL you need to add to the Post Logout Redirect URIs field is *`https://localhost:7200/`*.
+::
+
+## Configure ASP.NET Core to use PlusAuth
+Create an ASP.NET Core application or download the sample project from the link on the top of the page.
+
+### Add Dependencies
+
+```xml
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="6.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="6.0.1" />
+  </ItemGroup>
+```
+
+::alert{type=info}
+
+`Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation` provides hot reload support for `.cshtml` files.
+::
+
+### Configure ASP.NET Core Application to use PlusAuth
+
+We will be using `appsettings.Development.json` files for maintaining providing some constant values. If you are following the sample project, 
+rename `appsettings.json` to `appsettings.Development.json` and replace the values accordingly.
+
+```json
+// appsettings.Development.json
+
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "AllowedHosts": "*",
+  "Plusauth": {
+    "ClientId": "{YOUR-PLUSAUTH-CLIENT-ID}",
+    "ClientSecret": "{YOUR-PLUSAUTH-CLIENT-SECRET}",
+    "AuthUrl": "https://{YOUR-PLUSAUTH-TENANT-ID}.plusauth.com"
+  }
+}
+
+```
+
+::alert{type=warning}
+Do not put the `appsettings.Development.json` file into source control. Otherwise, your history will contain references to your client's secret.
+::
+
+### Add Authentication and OpenIdConnect Services
+
+To enable authentication with PlusAuth, edit `Program.cs` in the root and add the following section to your builder.
+
+```cs
+//Program.cs
+
+// Add services to the container.
+// Add runtime compilation for hot reload
+builder.Services.AddControllersWithViews().AddRazorRuntimeCompilation();
+
+builder.Services.AddAuthentication(options =>
+{
+  // If an authentication cookie is present, use it to get authentication information
+  options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+  options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+  options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+})
+.AddCookie() // cookie authentication middleware first
+.AddOpenIdConnect("PlusAuth", options =>
+{
+  options.ClientId = builder.Configuration["Plusauth:ClientId"];
+  options.ClientSecret = builder.Configuration["Plusauth:ClientSecret"];
+  options.Authority = builder.Configuration["Plusauth:AuthUrl"];
+  options.ResponseType = "code";
+  options.Scope.Clear();
+  options.Scope.Add("openid");
+  options.Scope.Add("email");
+  options.Scope.Add("profile");
+  // Get user info after authentication
+  options.GetClaimsFromUserInfoEndpoint = true;
+  // This is important to get user information
+  // Map All user information into User Claims
+  ClaimActionCollectionMapExtensions.MapAll(options.ClaimActions); 
+  // Set Authentication Issuer
+  options.ClaimsIssuer = "PlusAuth";
+  options.CallbackPath = new PathString("/callback");
+
+  options.Events = new OpenIdConnectEvents
+  {
+    // Configure post logout redirect
+    // This section provides logout action for PlusAuth
+    OnRedirectToIdentityProviderForSignOut = (context) =>
+    {
+      // Set PlusAuth logout endpoint
+      var logoutUri = $"{builder.Configuration["Plusauth:AuthUrl"]}/oidc/logout?client_id={builder.Configuration["Plusauth:ClientId"]}";
+
+      var postLogoutUri = context.Properties.RedirectUri;
+      if (!string.IsNullOrEmpty(postLogoutUri))
+      {
+        if (postLogoutUri.StartsWith("/"))
+        {
+          postLogoutUri = context.Request.Scheme + "://" + context.Request.Host + context.Request.PathBase + postLogoutUri;
+        }
+        // Return index page after logout
+        logoutUri += $"&post_logout_redirect_uri={ Uri.EscapeDataString(postLogoutUri)}";
+      }
+
+      context.Response.Redirect(logoutUri);
+      context.HandleResponse();
+
+      return Task.CompletedTask;
+    }
+  };
+});
+
+var app = builder.Build();
+
+//... rest of the code
+
+app.UseAuthentication();
+// Use authorization to protect endpoints
+app.UseAuthorization();
+app.UseCookiePolicy();
+
+//... rest of the code
+
+app.Run();
+```
+
+::alert{type=warning}
+The `Authentication` and `OpenIdConnect` services must be added before `builder.Build()` section.
+::
+
+::alert{type=warning}
+The `OnRedirectToIdentityProviderForSignOut` event enables `logout` from both `PlusAuth` and application. Removing event handler disables logout from `PlusAuth`.
+::
+
+## Implement login, user profile, and logout
+
+### Add Controllers
+
+Add `AccountController` to your application to enable `Login` and `Logout` actions. 
+
+```cs
+// Controllers/AccountController.cs
+
+public class AccountController : Controller
+  {
+    public async Task Login(string returnUrl = "/")
+    {
+      await HttpContext.ChallengeAsync("PlusAuth", new AuthenticationProperties() { RedirectUri = returnUrl });
+    }
+
+    [Authorize]
+    public async Task Logout()
+    {
+      await HttpContext.SignOutAsync("PlusAuth", new AuthenticationProperties
+      {
+        // Indicate that PlusAuth should redirect the user after logout.
+        RedirectUri = "/"
+      });
+      await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+    }
+  }
+```
+
+Add `HomeController` to your application to serve HTML. Add the logged-in user's profile information to the model in the controller.
+
+```cs
+// Controllers/HomeController.cs
+
+public class HomeController : Controller
+{
+  private readonly ILogger<HomeController> _logger;
+
+  public HomeController(ILogger<HomeController> logger)
+  {
+    _logger = logger;
+  }
+
+  public IActionResult Index()
+  {
+    return View();
+  }
+
+  [Authorize]
+  public IActionResult Profile()
+  {
+    return View();
+  }
+
+  [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+  public IActionResult Error()
+  {
+    return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+  }
+}
+```
+
+### Create HTML Pages
+
+### Shared
+
+Create *`_Layout.cshtml`* under `Views/Shared` folder.
+
+```html
+<!-- Views/Shared/_Layout.cshtml -->
+
+<body>
+  <header>
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="/">Plusauth Starter</a>
+
+        <ul class="nav navbar-nav navbar-right">
+          @if (User.Identity != null && User.Identity.IsAuthenticated) {
+          <li class="nav-item navbar-nav">
+            <a class="nav-link" asp-controller="Home" asp-action="Profile"> 
+              Logged in as: @User.FindFirst("username").Value 
+            </a>
+          </li>
+          <a class="btn btn-link" asp-controller="Account" asp-action="Logout"> 
+            Logout 
+          </a>
+          } else {
+          <li class="nav-item navbar-nav">
+            <a class="btn btn-link" asp-controller="Account" asp-action="Login"> 
+              Login 
+            </a>
+          </li>
+          }
+        </ul>
+      </div>
+    </nav>
+  </header>
+  <div class="container">
+    <main role="main" class="pb-3">@RenderBody()</main>
+  </div>
+
+  <script src="~/lib/jquery/dist/jquery.min.js"></script>
+  <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="~/js/site.js" asp-append-version="true"></script>
+  @await RenderSectionAsync("Scripts", required: false)
+</body>
+```
+
+### Homepage
+Create *`Index.cshtml`* under `Views/Home` folder.
+
+```html
+<!-- Views/Home/Index.cshtml -->
+
+@{ ViewData["Title"] = "Home Page"; }
+
+<div class="jumbotron">
+  <div class="container">
+    <h1 class="display-3">Hello, world!</h1>
+    <p>This is a template for a simple login/register system. It includes a simple 
+      OpenID Connect Implicit Flow. To view Profile page please login.</p>
+    <p>
+      @if (User.Identity != null && User.Identity.IsAuthenticated) {
+        <a class="btn btn-success btn-lg" asp-controller="Home" asp-action="Profile" role="button">
+          View Profile &raquo;
+        </a>
+      } else {
+        <a class="btn btn-primary btn-lg" asp-controller="Account" asp-action="Login" role="button">
+          Login/Register &raquo;
+        </a>
+      }
+```
+
+::alert{type=info}
+ If a user is unauthenticated, then the *`Login`* button will be shown, else the *`View Profile`* button is. 
+::
+
+
+### User Profile
+Create *`Profile.cshtml`* under `Views/Home` folder.
+
+```html
+<!-- Views/Home/Profile.cshtml -->
+
+@{
+  ViewData["Title"] = "Profile";
+}
+
+<div class="container">
+  <h3>Welcome @User.FindFirst("username").Value!</h3>
+  <h4>User claims:</h4>
+  <table style="max-width: 600px">
+    @foreach (var claim in User.Claims)
+    {
+      <tr>
+        <td style="padding: 8px">@claim.Type</td>
+        <td style="padding: 8px">@claim.Value</td>
+      </tr>
+    }
+  </table>
+</div>
+```
+
+## See it in action
+
+That's it. Start your app and point your browser to [https://localhost:7200](https://localhost:7200). Follow the **Log In** link to log in or sign up to your PlusAuth tenant. Upon successful login or signup, you should be redirected back to the application.

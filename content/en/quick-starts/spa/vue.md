@@ -1,0 +1,480 @@
+---
+title: Vue.js Tutorial
+description: This tutorial demonstrates how to add user login, logout, and profile to a Vue 3 application.
+topics:
+  - quickstarts
+  - single-page-application
+  - login
+  - user profile
+  - logout
+  - vue
+  - vue3
+  - vuejs
+type: spa
+icon: i-devicon-vuejs
+label: Vue
+---
+
+This tutorial shows how to use PlusAuth with [Vue 3](https://v3.vuejs.org/) Single Page Application. If you do not have a PlusAuth account, register from [here](https://dashboard.plusauth.com).
+
+::alert{type=info}
+This tutorial follows [plusauth-vue-starter](https://github.com/PlusAuth/plusauth-vue-starter) sample project on Github. You can download and follow the tutorial via the sample project.
+::
+
+## Create PlusAuth Client
+
+After you sign up or log in to PlusAuth, you need to create a client to get the necessary configuration keys in the dashboard.
+Go to [Clients](https://dashboard.plusauth.com/~clients) and create a client with the type of `Single Page Application`
+
+
+## Configure Client
+### Get Client Properties
+
+You will need your `Client Id` for interacting with PlusAuth. You can retrieve it from the created client's details.
+
+### Configure Redirect and Logout URIs
+
+When PlusAuth authenticates a user, it needs a URI to redirect back with access and id token. That URI must be in your client's `Redirect URI` 
+list. If your application uses a redirect URI which is not white-listed in your PlusAuth Client, you will receive an error.
+
+The same thing applies to the logout URIs. After the user logs out, you need a URI to be redirected.
+
+::alert{type=info}
+
+If you are following the sample project, the Redirect URL you need to add to the Redirect URIs fields are *`http://localhost:8080/callback`* and *`http://localhost:8080/silent-renew.html`*.
+The Logout URL you need to add to the Post Logout Redirect URIs field is *`http://localhost:8080/`*.
+::
+
+
+## Create a Vue Application
+
+Follow [Quick Start Guide](https://vuejs.org/guide/quick-start) from Vue.js official document site and create a project. 
+Make sure you have answered to `Add Vue Router for Single Page Application development?` prompt as `Yes`.
+Other prompts are not required for this tutorial.
+
+Here is the overview of the commands:
+
+
+
+Scaffolding project in ./<your-project-name>...
+Done.
+
+```sh
+# Install the CLI
+npm create vue@latest
+
+```
+
+<div class="language-sh">
+  <pre><code><span class="text-green-500">✔</span> <span style="color:#A6ACCD;">Project name: <span style="color:#888;">… <span style="color:#89DDFF;">&lt;</span><span style="color:#888;">your-project-name</span><span style="color:#89DDFF;">&gt;</span></span></span><br>
+  <span class="text-green-500">✔</span> <span style="color:#A6ACCD;">Add TypeScript? <span style="color:#888;">… <u style="color:#89DDFF">No</u> / Yes</span></span><br>
+  <span class="text-green-500">✔</span> <span style="color:#A6ACCD;">Add JSX Support? <span style="color:#888;">… <u style="color:#89DDFF">No</u> / Yes</span></span><br>
+  <span class="text-green-500">✔</span> <span style="color:#A6ACCD;">Add Vue Router for Single Page Application development? <span style="color:#888;">… No /  <u style="color:#89DDFF">Yes</u></span><br>
+  <span class="text-green-500">✔</span> <span style="color:#A6ACCD;">Add Pinia for state management? <span style="color:#888;">… <u style="color:#89DDFF">No</u> / Yes</span></span><br>
+  <span class="text-green-500">✔</span> <span style="color:#A6ACCD;">Add Vitest for Unit testing? <span style="color:#888;">… <u style="color:#89DDFF">No</u> / Yes</span></span><br>
+  <span class="text-green-500">✔</span> <span style="color:#A6ACCD;">Add an End-to-End Testing Solution? <span style="color:#888;">… <u style="color:#89DDFF">No</u> / Cypress / Playwright</span></span><br>
+  <span class="text-green-500">✔</span> <span style="color:#A6ACCD;">Add ESLint for code quality? <span style="color:#888;">… <u style="color:#89DDFF">No</u> / Yes</span></span><br>
+  <span class="text-green-500">✔</span> <span style="color:#A6ACCD;">Add Prettier for code formatting? <span style="color:#888;">… <u style="color:#89DDFF">No</u> / Yes</span></span><br>
+  <span></span><br>
+  <span style="color:#A6ACCD;">Scaffolding project in ./<span style="color:#89DDFF;">&lt;</span><span style="color:#888;">your-project-name</span><span style="color:#89DDFF;">&gt;</span>...</span><br>
+  <span style="color:#A6ACCD;">Done.</span></code></pre><br>
+</div>
+
+
+### Install OIDC Client
+For interacting with PlusAuth it is advised to use an OpenID Connect library.
+In this tutorial we will be using [oidc-client-js](https://github.com/PlusAuth/oidc-client-js) 
+but you could use any OpenID Connect library.
+
+Install `oidc-client-js` with the following command
+```bash
+npm install @plusauth/oidc-client-js
+```
+
+::alert{type=info}
+
+`oidc-client-js` is an OpenID Connect (OIDC) and OAuth2 library for browser based JavaScript applications.
+You can find source code on [Github](https://github.com/PlusAuth/oidc-client-js) and the API documentation [here](https://docs.plusauth.com/tools/oidc-client-js).
+::
+
+## Configure Vue Application to use PlusAuth
+
+We will be using `dotenv` files for maintaining providing some constant values. Vite supports them,
+so no need for extra configuration.
+
+### Create the .env file
+
+Create the `.env` file at the root of your project with the following and modify values accordingly.
+```properties
+# .env
+VITE_OIDC_ISSUER=https://<YOUR_PLUSAUTH_TENANT_NAME>.plusauth.com/
+VITE_OIDC_CLIENT_ID=<YOUR_PLUSAUTH_CLIENT_ID>
+```
+
+::alert{type=info}
+If you are following the sample project, rename `.env.example` to `.env` and replace the values accordingly.
+::
+
+
+### Configure OIDC Client
+We need to initialize our OIDC Client library to handle authentication-related operations.
+Create `auth.js` in `src` folder. Configure `oidc-client-js` as following:
+
+```js
+import { OIDCClient } from '@plusauth/oidc-client-js'
+
+const Auth = new OIDCClient({
+  issuer: process.env.VUE_APP_OIDC_ISSUER,
+  client_id: process.env.VUE_APP_CLIENT_ID,
+  redirect_uri: 'http://localhost:3000/callback',
+  silent_redirect_uri: 'http://localhost:3000/silent-renew.html',
+  post_logout_redirect_uri: 'http://localhost:3000/',
+  response_mode: 'form_post',
+  response_type: 'id_token token',
+  scope: 'openid profile',
+  checkSession: true,
+  autoSilentRenew: true,
+  requestUserInfo: true,
+})
+
+export { Auth }
+
+```
+
+You may have noticed that the values defined in the [Configure Client](#configure-client) section are used here. If you have used different
+values make sure to update this file accordingly.
+
+### Configure Vue Application
+Let's start by defining our application's entry point file.
+Go to file named `main.js` in the `src` folder. Import the `auth` file we have created above and make the following changes.
+
+```js
+import { createApp } from 'vue'
+import { Router } from './router.js'
+import App from './App.vue'
+import 'bootstrap/dist/css/bootstrap.min.css'
+import { Auth } from './auth.js' // [!code ++]
+
+const app = createApp(App)
+
+app.use(Router)
+
+// Make auth object global to access from anywhere
+app.config.globalProperties.$auth = Auth // [!code ++]
+
+Auth.initialize() // [!code ++]
+    .then(() => {}) // [!code ++]
+    .catch(console.error) // [!code ++]
+    .finally(() => { // [!code ++]
+      app.mount('#app')
+    }) // [!code ++]
+
+```
+
+### Configure Router
+Now let's define our application's router.
+We are going to define routes of our views. `requiresAuth` flag in the metadata of routes will ensure those routes are accessible only by authenticaed users.
+
+Create `router.js` in `src` folder as following:
+
+```js
+import * as VueRouter from 'vue-router'
+import { Auth } from "./auth.js";
+import Home from './components/Home.vue'
+import Profile from './components/Profile.vue'
+import Unauthorized from './components/Unauthorized.vue'
+import AuthCallback from './components/AuthCallback.vue'
+import SilentRenew from './components/SilentRenew.vue'
+
+const routes = [
+  {
+    path: '/',
+    name: 'home',
+    component: Home
+  },
+  {
+    path: '/callback', // Authentication redirect uri
+    name: 'AuthCallback',
+    component: AuthCallback
+  },
+  {
+    path: '/silent-renew.html', // Token silent renew uri
+    name: 'SilentRenew',
+    component: SilentRenew
+  },
+  {
+    path: '/profile',
+    name: 'profile',
+    meta: {requiresAuth: true},
+    component: Profile
+  },
+  {
+    path: '/unauthorized', // Redirect to page if user not authorized
+    name: 'unauthorized',
+    component: Unauthorized
+  },
+  {
+    path: '/:pathMatch(.*)*', // redirect to home if unhandled route entered
+    redirect: '/'
+  }
+]
+
+const Router = VueRouter.createRouter({
+  history: VueRouter.createWebHistory('/'),
+  routes
+})
+
+// Check user if logged in for routes that requires auth
+Router.beforeEach(async (to, from, next) => {
+  const loggedIn = await Auth.isLoggedIn(true)
+  if (to.matched.some(record => record.meta.requiresAuth)) {
+    if (!loggedIn) {
+      return next({
+        path: '/unauthorized'
+      })
+    }
+  }
+  return next()
+})
+
+export { Router }
+```
+
+## Implement login, user profile, and logout
+
+Until now, we have defined our authentication helper and routes. It is time to create the pages and interact with auth helper.
+
+### Create Main Vue Component
+Let's create a simple layout for our application. Add `Header` component and `router-view` to `App.vue`.
+
+```html
+<template>
+	<div id="app">
+		<Header></Header>
+		<router-view />
+	</div>
+</template>
+<script>
+import Header from './components/Header'
+export default {
+	name: 'App',
+	components: { Header }
+}
+</script>
+<style>
+body {
+	padding-top: 5rem;
+}
+</style>
+```
+
+### Create Header Component
+
+Create `Header.vue` under `src/components` folder. It will be a basic header.
+If a user is authenticated, it will show the user's identifier and a `Logout` button. 
+If not, a `Login` button will be there to initiate login. 
+
+```html
+<template>
+  <header>
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+      <a class="navbar-brand" href="/">Plusauth Starter</a>
+      <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+        <ul class="navbar-nav mr-auto"></ul>
+        <template v-if="user">
+          <li class="nav-item navbar-nav">
+            <router-link class="nav-link" to="/profile">{{
+              `Logged in as: ${userDisplayName}`
+            }}</router-link>
+          </li>
+          <button class="btn btn-link" @click="$auth.logout()">Logout</button>
+        </template>
+        <li v-else class="nav-item navbar-nav">
+          <button class="btn btn-link" @click="$auth.login()">Login</button>
+        </li>
+      </div>
+    </nav>
+  </header>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      user: null
+    }
+  },
+  computed: {
+    userDisplayName() {
+      if (!this.user) {
+        return null
+      } else {
+        if (!this.user.given_name || !this.user.family_name) {
+          return this.user.username || this.user.email || this.user.sub
+        }
+        return `${this.user.given_name} ${this.user.family_name}`
+      }
+    }
+  },
+  async created() {
+    this.$auth.on('user_login', ({ user }) => {
+      this.user = user
+    })
+    this.$auth.on('user_logout', () => {
+      this.user = null
+    })
+    this.user = await this.$auth.getUser()
+  }
+}
+</script>
+```
+
+### Create AuthCallback 
+To handle authorization results after a successful login, we need
+a simple page and let the library handle the authentication result.
+Create `AuthCallback.vue` under `src/components` folder.
+
+```html
+<template>
+  <div></div>
+</template>
+<script>
+export default {
+  name: 'AuthCallback',
+  async mounted() {
+    try {
+      await this.$auth.loginCallback(window.location.href)
+      this.$router.replace('/')
+    } catch (e) {
+      console.error(e)
+    }
+  }
+}
+</script>
+```
+
+### Create SilentRenew
+Access tokens retrieved from PlusAuth have a life span.
+`oidc-client-js` automatically provides `access_token` renewal without too much hassle.
+Before your access token expires, it will receive a new one in the background so that
+your users will have a flawless app experience without signing in again.
+
+Create `SilentRenew.vue` under `src/components` folder as following:
+```html
+<template> </template>
+<script>
+import { OIDCClient } from '@plusauth/oidc-client-js'
+export default {
+  name: 'SilentRenew',
+  async mounted() {
+    await new OIDCClient({
+      issuer: process.env.VUE_APP_OIDC_ISSUER
+    }).loginCallback()
+  }
+}
+</script>
+```
+
+### Create Views
+### HomePage
+
+Create `Home.vue` under `src/components`.
+
+```html
+<template>
+  <div class="jumbotron">
+    <div class="container">
+      <h1 class="display-3">Hello, world!</h1>
+      <p>
+        This is a template for a simple login/register system. It includes the
+        OpenID Connect Implicit Flow. To view Profile page please login.
+      </p>
+      <p>
+        <router-link v-if="user" class="btn btn-success btn-lg" to="/profile">
+          View Profile &raquo;
+        </router-link>
+        <button v-else class="btn btn-primary btn-lg" @click="$auth.login()">
+          Login/Register &raquo;
+        </button>
+      </p>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'Home',
+  data() {
+    return {
+      user: null
+    }
+  },
+  async created() {
+    this.$auth.on('user_login', ({ user }) => {
+      this.user = user
+    })
+    this.$auth.on('user_logout', () => {
+      this.user = null
+    })
+    this.user = await this.$auth.getUser()
+  }
+}
+</script>
+```
+
+### Profile Page
+
+Create `Profile.vue` under `src/components`.
+
+```html
+<template>
+  <div class="container" v-if="user">
+    <h3>Welcome {{ user.username }} !</h3>
+    <pre>User object: {{ JSON.stringify(user, null, 2) }} </pre>
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'Profile',
+  data() {
+    return {
+      user: null
+    }
+  },
+  async created() {
+    this.$auth.on('user_login', ({ user }) => {
+      this.user = user
+    })
+    this.$auth.on('user_logout', () => {
+      this.user = null
+    })
+    this.user = await this.$auth.getUser()
+  }
+}
+</script>
+```
+
+### Add Unauthorized Page
+We will display a page whenever a user tries to access a protected route without signing in.
+
+Create `Unauthorized.vue` under `src/components`.
+
+```html
+<template>
+  <div class="container">
+    <p>You must log in to view the page</p>
+    <button class="btn btn-primary" @click="$auth.login()">Log in</button>
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'Unauthorized'
+}
+</script>
+```
+
+## See it in action
+
+That's it. Start your app and point your browser to [http://localhost:8080](http://localhost:8080). Follow the **Log In** link to log in or sign up to your PlusAuth tenant. Upon successful login or signup, you should be redirected back to the application.

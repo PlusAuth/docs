@@ -1,0 +1,70 @@
+---
+title: "Password Policy"
+meta_title: "Password Policy"
+meta_description: "PlusAuth provides configurable password policy without
+— any hassle."
+
+keywords:
+  - concepts
+  - plusauth
+  - security
+  - password
+  - custom password
+  - user credentials
+  - login
+  - login security
+---
+
+To enforce your custom password policy, all you need to do is to configure it 
+accordingly to your needs.
+
+
+To customize password policy, go to [Dashboard > Settings > Database](https://dashboard.plusauth.com/#settings/database).
+
+## Configuration
+
+| Field | Description |
+| --- | --- |
+| Min-Max | Define minimum and maximum lengths of password. |
+| Custom Characters | If specified, your users must include at least one of provided characters in their password |
+| At Least X lowercase letter | If provided, your users must include at least X lowercase letters in their password |
+| At Least X uppercase letter  | If provided, your users must include at least X uppercase letters in their password  |
+| At Least X number | If provided, your users must include at least X numbers in their password  |
+
+::alert{type=info}
+In PlusAuth views you can access this configuration from `window.PlusAuth.settings.password_policy`
+::
+
+## Password History
+The system will maintain a password history for each user and prevent the reuse of old passwords. 
+The password history can be up to 10 passwords in size. When enabled, any existing users will be unaffected; the system 
+will maintain their password history going forward.
+
+## Password Hash Function
+
+PlusAuth even lets you customize the password hash function used in its database. Available options are
+- bcrypt
+- argon2
+- pbkdf2
+
+By default `bcrypt` is used as it is mostly used hash algorithm. If you change your hash algorithm, existing users will 
+be migrated to that hash algorithm on their first successful login.
+
+This configuration set per-user basis, storing the hash function in `user.credentials` object. 
+User credentials can be accessed from only [Core API > Users > Get User](/en/api/core/users/get-user)
+
+Here is an example credential object: 
+```json
+{
+  "id": "CREDENTIAL_ID",
+  "type": "password",
+  "details": {
+    "hash": "HASH_STRING",
+    "salt": "SALT_STRING",
+    "hash_fn": "bcrypt"
+  },
+  "connection": null,
+  "created_at": "2021-01-01T00:00:00.000000+00:00",
+  "updated_at": null
+}
+```
