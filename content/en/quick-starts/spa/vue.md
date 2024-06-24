@@ -41,8 +41,8 @@ The same thing applies to the logout URIs. After the user logs out, you need a U
 
 ::alert{type=info}
 
-If you are following the sample project, the Redirect URL you need to add to the Redirect URIs fields are *`http://localhost:8080/callback`* and *`http://localhost:8080/silent-renew.html`*.
-The Logout URL you need to add to the Post Logout Redirect URIs field is *`http://localhost:8080/`*.
+If you are following the sample project, the Redirect URL you need to add to the Redirect URIs fields are *`http://localhost:5173/callback`* and *`http://localhost:5173/silent-renew.html`*.
+The Logout URL you need to add to the Post Logout Redirect URIs field is *`http://localhost:5173/`*.
 ::
 
 
@@ -124,12 +124,12 @@ Create `auth.js` in `src` folder. Configure `oidc-client-js` as following:
 import { OIDCClient } from '@plusauth/oidc-client-js'
 
 const Auth = new OIDCClient({
-  issuer: process.env.VUE_APP_OIDC_ISSUER,
-  client_id: process.env.VUE_APP_CLIENT_ID,
-  redirect_uri: 'http://localhost:3000/callback',
-  silent_redirect_uri: 'http://localhost:3000/silent-renew.html',
-  post_logout_redirect_uri: 'http://localhost:3000/',
-  response_mode: 'form_post',
+  issuer: import.meta.env.VITE_OIDC_ISSUER,
+  client_id: import.meta.env.VITE_CLIENT_ID,
+  redirect_uri: 'http://localhost:5173/callback',
+  silent_redirect_uri: 'http://localhost:5173/silent-renew',
+  post_logout_redirect_uri: 'http://localhost:5173/',
+  response_mode: 'fragment',
   response_type: 'id_token token',
   scope: 'openid profile',
   checkSession: true,
@@ -149,15 +149,16 @@ Let's start by defining our application's entry point file.
 Go to file named `main.js` in the `src` folder. Import the `auth` file we have created above and make the following changes.
 
 ```js
+import './assets/main.css'
+
 import { createApp } from 'vue'
-import { Router } from './router.js'
 import App from './App.vue'
-import 'bootstrap/dist/css/bootstrap.min.css'
-import { Auth } from './auth.js' // [!code ++]
+import router from './router'
+import { Auth } from './auth' // [!code ++]
 
 const app = createApp(App)
 
-app.use(Router)
+app.use(router)
 
 // Make auth object global to access from anywhere
 app.config.globalProperties.$auth = Auth // [!code ++]
@@ -198,7 +199,7 @@ const routes = [
     component: AuthCallback
   },
   {
-    path: '/silent-renew.html', // Token silent renew uri
+    path: '/silent-renew', // Token silent renew uri
     name: 'SilentRenew',
     component: SilentRenew
   },
@@ -368,7 +369,7 @@ export default {
   name: 'SilentRenew',
   async mounted() {
     await new OIDCClient({
-      issuer: process.env.VUE_APP_OIDC_ISSUER
+      issuer: process.env.VITE_OIDC_ISSUER
     }).loginCallback()
   }
 }
@@ -477,4 +478,4 @@ export default {
 
 ## See it in action
 
-That's it. Start your app and point your browser to [http://localhost:8080](http://localhost:8080). Follow the **Log In** link to log in or sign up to your PlusAuth tenant. Upon successful login or signup, you should be redirected back to the application.
+That's it. Start your app and point your browser to [http://localhost:5173](http://localhost:5173). Follow the **Log In** link to log in or sign up to your PlusAuth tenant. Upon successful login or signup, you should be redirected back to the application.
