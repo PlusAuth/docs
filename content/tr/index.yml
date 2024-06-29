@@ -20,6 +20,13 @@ toolsCards:
     description: >-
       PlusAuth'u harici araçlarla entegre etmek için öğretici kaynaklar
 
+  - title: Araçlar
+    icon: 'i-ph-toolbox-duotone'
+    iconColor: 'text-indigo-800'
+    to: '/tools'
+    description: >-
+      PlusAuth tarafından oluşturulan ekstra araçlar
+
   - title: API Dökümantasyonları
     icon: 'i-solar-code-square-bold-duotone'
     iconColor: 'text-amber-500'
@@ -55,10 +62,3 @@ toolsCards:
     description: >-
       Yardıma ihtiyacınız olursa burası en doğru yer
 
-
-  - title: Hizmet Durumu
-    icon: 'i-heroicons-signal'
-    iconColor: 'text-indigo-800'
-    to: 'https://status.plusauth.com'
-    description: >-
-      PlusAuth hizmetlerinin durumu

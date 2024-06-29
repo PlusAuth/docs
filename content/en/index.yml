@@ -20,6 +20,13 @@ toolsCards:
     description: >-
       Tutorials for integrating PlusAuth with external tools
 
+  - title: Tools
+    icon: 'i-ph-toolbox-duotone'
+    iconColor: 'text-indigo-800'
+    to: '/tools'
+    description: >-
+      Additional tools built by PlusAuth
+
   - title: API Reference
     icon: 'i-solar-code-square-bold-duotone'
     iconColor: 'text-amber-500'
@@ -55,10 +62,3 @@ toolsCards:
     description: >-
       If you need any help this is the right place
 
-
-  - title: Service Status
-    icon: 'i-heroicons-signal'
-    iconColor: 'text-indigo-800'
-    to: 'https://status.plusauth.com'
-    description: >-
-      Status of PlusAuth services
