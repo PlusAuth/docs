@@ -1,0 +1,8 @@
+basePath: https://static.plusauth.com/ecosystem/ldap-proxy
+releases:
+  - name: v1.0.0
+    assets:
+      - os: linux
+        arch: x86_64
+        filename: ldap-proxy-linux-x86_64
+        checksum: 515344217e42b08693c12dedba3645101e49686eaa872fe77352b45b6f9b8185
