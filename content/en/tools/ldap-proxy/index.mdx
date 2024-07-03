@@ -5,19 +5,59 @@ image: /assets/logo/ldap-proxy.png
 description: A proxy solution between your legacy applications and your LDAP/AD systems, allowing you to enforce MFA
 ---
 
-Introducing our innovative Proxy for Active Directory (AD) and LDAP, designed to seamlessly integrate with PlusAuth
-for enhancing security in legacy applications. This advanced proxy solution acts as an intermediary between
-your legacy applications and your LDAP/AD systems, allowing you to implement Multi-Factor Authentication (MFA)
-without altering the existing infrastructure.
+Legacy applications that directly connect to AD/LDAP using LDAP clients can now benefit from an additional layer
+of security. Our proxy ensures that every authentication request is routed through PlusAuth, enabling MFA
+to protect against unauthorized access and potential security breaches.
 
-Legacy applications that directly connect to LDAP/AD using LDAP clients can now benefit from an additional layer
-of security. Our proxy ensures that every authentication request is routed through PlusAuth, enabling robust
-MFA protocols to protect against unauthorized access and potential security breaches.
 
-With this proxy, organizations can effortlessly upgrade their security measures, ensuring compliance with modern
-authentication standards while maintaining the functionality and performance of their legacy systems. It's an
-essential tool for any enterprise looking to bolster their authentication framework without the need for
-extensive redevelopment of existing applications.
+## Usage
 
-Experience the future of secure authentication with our Proxy for AD and LDAP—where legacy meets innovation
-for unparalleled security.
+After you download release from [releases](./releases) run the application with a parameter pointing to your config file.
+For configuration file reference, have a look at to [Configuration](#configuration) section.
+
+```shell
+> ./ldap-proxy --config ldap-proxy-config.json
+```
+
+Following flow is applicable when MFA enabled in configuration for a ldap server instance:
+  ![AD/LDAP proxy flow diagram](./ldap-proxy-flow-diagram.webp){class="w-full"}
+
+## Configuration
+Ldap Proxy uses `json` as configuration file format. Here is configuration file reference:
+
+```json5
+{
+  log_level: "info", // one of  'trace', 'debug','info','warn','error','silent'. Defaults to 'info'
+  server: {
+    hostname: "0.0.0.0", // hostname for the proxy. Defaults to "127.0.0.1"
+    port: 8389, // port for the proxy. Defaults to 8389
+    certificate: {
+      cert_file: '/path/to/cert.pem', // File path pointing to certificate for the proxy server in pem format.
+      key_file: '/path/to/key.pem', // File path pointing to private key for the proxy server in pem format.
+    }
+  },
+  plusauth: {
+    domain: "plusauth.com", // Your PlusAuth instance's base domain. Defaults to "plusauth.com"
+  },
+  // An array containing your AD/LDAP server's configuration
+  ldap_servers: [
+    {
+      uri: "ldap://localhost:389", // LDAP server URI with format of <ldap/s>://<host>:<port>
+      // We need to map your AD/LDAP server to plusauth with following configuration.
+      plusauth: {
+        tenant_id: "<your-tenant-id>", // Your PlusAuth tenant id.
+        connection_name: "<your-ldap-connection-name>", // Created connection's name.
+        client_id: "<your-client-id>", // Created client's id
+        client_secret: "<your-client-secret>", // Created client's secret
+        mfa: {
+          enabled: true, // Whether enable MFA for this AD/LDAP or not. Defaults to true
+          method: "otp", // Preferred MFA method. One of "otp", "sms", "push", "email". Defaults to "otp"
+          separator: "|", // A string separator for separating OTP code from password. Defaults to " " (a single space character)
+        }
+      },
+    }
+  ]
+}
+
+
+```

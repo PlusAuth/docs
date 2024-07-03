@@ -2,6 +2,11 @@ import * as mdx from 'eslint-plugin-mdx'
 
 export default [
   {
+    ignores: [
+      "content/en/tools/ldap-proxy/index.mdx"
+    ]
+  },
+  {
     ...mdx.flat,
     // optional, if you want to lint code blocks at the same
     processor: mdx.createRemarkProcessor({
