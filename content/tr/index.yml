@@ -14,7 +14,7 @@ toolsCards:
       PlusAuth'u birkaç dakika içinde kullanmaya başlayın
 
   - title: Öğreticiler
-    icon: 'i-ph-graduation-cap-duotone'
+    icon: 'i-ph-chalkboard-teacher-duotone'
     iconColor: 'text-indigo-500'
     to: '/tutorials'
     description: >-
