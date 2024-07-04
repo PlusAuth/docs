@@ -1,0 +1,6 @@
+title: OIDC Client JS
+key: oidc-client-js
+icon: i-devicon-github
+description: OpenID Connect (OIDC) and OAuth2 library for browser-based JavaScript applications.
+external: true
+link: https://github.com/PlusAuth/oidc-client-js

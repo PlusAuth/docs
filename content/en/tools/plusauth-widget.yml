@@ -1,0 +1,6 @@
+title: PlusAuth Widget
+key: plusauth-widget
+icon: i-devicon-github
+description: Web widget for rendering PlusAuth views/pages. This is the library used in default views.
+external: true
+link: https://github.com/PlusAuth/plusauth-widget
