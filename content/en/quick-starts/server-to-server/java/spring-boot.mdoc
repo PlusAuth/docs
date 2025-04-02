@@ -1,0 +1,342 @@
+---
+title: Java Spring Boot API Authorization Tutorial
+description: This tutorial demonstrates how to add API authorization to a Java Spring Boot application.
+topics:
+- quickstarts
+- server to server
+- api
+- authorization
+- java
+- spring boot
+- spring oauth resource
+contentType: tutorial
+useCase: quickstart
+type: server-to-server
+icon: i-devicon-spring
+label: Spring Boot
+---
+This tutorial shows how to add authorization to Java Spring Boot API with PlusAuth. If you do not have a PlusAuth account, register from [here](https://dashboard.plusauth.com).
+
+{% alert %}
+This tutorial follows [plusauth-spring-backend-starter](https://github.com/PlusAuth/plusauth-spring-backend-starter) sample project on Github. You can download and follow the tutorial via the sample project.
+{% /alert %}
+
+## Create PlusAuth Client
+
+After you sign up or log in to PlusAuth, you need to create a client to get the necessary configuration keys in the dashboard.
+Go to [Clients](https://dashboard.plusauth.com/~clients) and create a client with the type of `Server to Server Application`
+
+## Configure Client
+
+### Get Client Properties
+
+You will need your `Client Id` and `Client Secret` for interacting with PlusAuth. You can retrieve them from the created client's details.
+
+## Configure APIs
+
+### Create API
+
+API is a definition in PlusAuth equals to your services which you want to secure. You need to create an API to add authorization to your app.
+Go to [Api's](https://dashboard.plusauth.com/~apis) and create a new API. Provide a name and audience to your api. `Audience` must be a URL that identifies your api, like `https://example.com/api`.
+
+### Create API Permissions
+After you create the API, you can create permissions for it. Permissions allow you to define how resources can be accessed with a specific access token.
+Go to [Dashboard > Api's ](https://dashboard.plusauth.com/~apis) and click on the `Permissions` button on the row at the data table which contains your API.
+
+{% alert %}
+This tutorial uses `users:read`, `users:write`, `users:update` and `users:delete` permissions to secure resources
+{% /alert %}
+
+### Authorize Client
+Finally, authorize your client in your api to grant permissions. Go to [Dashboard > Api's ](https://dashboard.plusauth.com/~apis), then select your api and navigate to `Authorized Clients`.
+Add your client to the `Authorized Clients` list and grant permissions to it.
+
+## Configure Spring Boot to add Authorization
+
+Create a Spring Boot application or download the sample project from the link on top of the page.
+
+### Add Dependencies
+
+* If using Gradle
+
+```groovy
+implementation 'org.springframework.boot:spring-boot-starter-web'
+implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+implementation 'org.springframework.boot:spring-boot-devtools'
+```
+
+* If using Maven
+
+```xml
+<dependencies>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-devtools</artifactId>
+        <scope>runtime</scope>
+        <optional>true</optional>
+    </dependency>
+</dependencies>
+```
+
+{% alert %}
+`spring-boot-starter-oauth2-resource-server` provides all Spring Security dependencies to add authorization
+{% /alert %}
+
+
+### Configure Spring Security
+
+The sample uses `application.yml` file to add Oauth2 `issuer`, `jwks uri`, and `audience`. Other configuration mechanisms like `application.properties` are also supported.
+
+
+```yml
+#src/main/resources/application.yml
+plusauth:
+  audience: {YOUR-AUDIENCE}
+
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://{YOUR-TENANT-NAME}.plusauth.com
+          jwk-set-uri: https://{YOUR-TENANT-NAME}.plusauth.com/.well-known/jwks.json
+```
+
+{% alert type="warning" %}
+Change `audience` and `tenant` fields with the data which you created earlier.
+Spring Oauth2 Security fetches all the information from `jwk-set-uri`. Put your tenant name to Issuer Uri and Jwks Uri like `https://example.plusauth.com`
+{% /alert %}
+
+### Configure Authorization Middleware
+
+`WebSecurityConfigurerAdapter` interface provides a way to add authorization middleware to endpoints. `SecurityConfig` middleware, which is defined below, checks the request's header for `access token`.
+An error response returns from middleware if the token is not present in the header of the request.
+
+```java
+// com/plusauth/starter/config/SecurityConfig.java
+
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+  @Value("${plusauth.audience}")
+  private String audience;
+
+  @Value("${spring.security.oauth2.resourceserver.jwt.jwk-set-uri}")
+  private String jwtSetUri;
+
+  @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
+  private String issuer;
+
+  private JwtDecoder jwtDecoder() {
+    // Build at+jwt token decoder with Nimbus
+    NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withJwkSetUri(jwtSetUri)
+        .jwtProcessorCustomizer(p -> p.setJWSTypeVerifier(
+            new DefaultJOSEObjectTypeVerifier<>(new JOSEObjectType("at+jwt")))) // Add support for at+jwt token type
+        .build();
+
+    // Add audience validator to get decoder
+    OAuth2TokenValidator<Jwt> audienceValidator = new AudienceValidator(audience);
+    OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(issuer);
+    OAuth2TokenValidator<Jwt> withAudience = new DelegatingOAuth2TokenValidator<>(withIssuer, audienceValidator);
+    jwtDecoder.setJwtValidator(withAudience);
+
+    return jwtDecoder;
+  }
+
+  @Override
+  public void configure(HttpSecurity http) throws Exception {
+
+    // Add authorization to users endpoint
+    http.requiresChannel().anyRequest().requiresInsecure().and().cors()
+        .and().csrf().disable()
+        .authorizeRequests()
+        .antMatchers(HttpMethod.GET, "/users/**").hasAuthority("SCOPE_users:read")
+        .antMatchers(HttpMethod.POST, "/users/**").hasAuthority("SCOPE_users:write")
+        .antMatchers(HttpMethod.PUT, "/users/**").hasAuthority("SCOPE_users:update")
+        .antMatchers(HttpMethod.DELETE, "/users/**").hasAuthority("SCOPE_users:delete")
+        .anyRequest()
+        .authenticated() // All requests require authentication
+        .and()
+        .oauth2ResourceServer() // add oauth2 resource server configuration
+        .jwt().decoder(jwtDecoder()); // set jwt decoder
+
+  }
+}
+```
+
+You may have noticed that the `Audience` value defined in the [Create API](#create-api) section is used here.
+
+Also, `jwtDecoder` provides token decoder and validation functionality to security middleware. It also provides `scope` validation if the endpoint requires permission.
+
+```java
+// com/plusauth/starter/config/AudienceValidator.java
+
+class AudienceValidator implements OAuth2TokenValidator<Jwt> {
+
+  private final String audience;
+
+  AudienceValidator(String audience) {
+    this.audience = audience;
+  }
+
+  // Token audience validation
+  public OAuth2TokenValidatorResult validate(Jwt jwt) {
+    OAuth2Error error = new OAuth2Error("invalid_token", "The required audience is missing", null);
+
+    if (jwt.getAudience().contains(audience)) {
+      return OAuth2TokenValidatorResult.success();
+    }
+    return OAuth2TokenValidatorResult.failure(error);
+  }
+}
+```
+
+### Create Protected Controller
+
+Add a Controller to your application to serve API endpoints. All routes are protected by `SecurityConfig`, which is defined in [Configure Authorization Middleware](#configure-authorization-middleware)
+section, so you don't need to add any annotation to secure endpoints.
+
+
+```java
+// com/plusauth/starter/web/UserController.java
+
+@RestController
+@RequestMapping(value = "/users")
+public class UserController {
+
+  @GetMapping
+  public String findAll() {
+    return "All Users List";
+  }
+
+  @ResponseStatus(HttpStatus.CREATED)
+  @PostMapping
+  public String create() {
+    return "New User Created";
+  }
+
+  @PutMapping
+  public String update() {
+    return "User Updated";
+  }
+
+  @ResponseStatus(HttpStatus.OK)
+  @DeleteMapping
+  public String delete() {
+    return "User Deleted";
+  }
+}
+```
+
+## See it in action
+
+Start your app and follow the [Using API](#using-api) section to see it in action.
+
+## Using API
+
+You need to obtain an `access token` to call your API. This tutorial shows how `OAuth Client Credentials Flow` works for server-to-server communication where there is no user and login process.
+You will need your client's `Client Id` and `Client Secret` properties to acquire an access token in `Client Credentials Flow`.
+Also, you must include `Audience` and `Scope` parameters to access your API.
+
+{% alert %}
+
+If you are looking for other authorization flows that require login and user, refer to [Regular Web Application](https://docs.plusauth.com/quickStart/web/) or [Single Page Application](https://docs.plusauth.com/quickStart/spa) quickstarts.
+{% /alert %}
+
+### Obtain Access Token
+
+You can obtain an access token using the command line or another application. Create a POST request and enter the required parameters.
+
+```bash
+# bash
+
+curl --request POST \
+  --url 'https://<YOUR_TANENT_ID>.plusauth.com/oauth2/token' \
+  --header 'content-type: application/x-www-form-urlencoded' \
+  --data 'grant_type=client_credentials' \
+  --data 'client_id=<YOUR_CLIENT_ID>' \
+  --data 'client_secret=<YOUR_CLIENT_SECRET>' \
+  --data 'audience=<YOUR_AUDIENCE>' \
+  --data 'scope=<SCOPE>'
+
+```
+
+You may have noticed that the values defined in [Configure Client](#configure-client) and [Configure APIs](#configure-apis) sections are used here. If you have used different
+values make sure to update this file accordingly.
+
+{% alert %}
+
+If you are following the sample project, your scope parameter needs to be set like following `users:read users:write users:update users:delete` to access the example API.
+{% /alert %}
+
+### Call Your API
+
+- **Calling Endpoint Without Access Token**
+
+If you request your protected endpoint without an access token, you will get a `401 Unauthorized` error response.
+
+```bash
+# bash
+
+> curl -i http://localhost:8080/users
+HTTP/1.1 401
+Vary: Origin
+WWW-Authenticate: Bearer
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 1; mode=block
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Pragma: no-cache
+Expires: 0
+X-Frame-Options: DENY
+Content-Length: 0
+```
+
+- **Calling Endpoint With Access Token**
+
+If you request your protected endpoint with a valid access token, you will get a `200 OK` response.
+
+```bash
+# bash
+
+> curl -i http://localhost:8080/users \
+-H "Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCIsImtpZCI6Inh4T3l2R0hWV3dCIsImtpZ..."
+HTTP/1.1 200
+X-XSS-Protection: 1; mode=block
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Pragma: no-cache
+Expires: 0
+Content-Type: text/plain;charset=UTF-8
+Content-Length: 14
+
+All Users List
+```
+
+If you request your protected endpoint with insufficient scope, you will get `403 Forbidden` error response.
+
+```bash
+# bash
+
+> curl -i http://localhost:8080/users \
+-H "Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCIsImtpZCI6Inh4T3l2R0hWV3dvc0dOMU9ON..."
+HTTP/1.1 403
+Vary: Origin
+WWW-Authenticate: Bearer error="insufficient_scope", error_description="The request requires higher privileges than provided by the access token."
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 1; mode=block
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Pragma: no-cache
+Expires: 0
+X-Frame-Options: DENY
+Content-Length: 0
+```
+
+As you see, the access token needs to have the `users:read` scope to access the endpoint.

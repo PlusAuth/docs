@@ -1,0 +1,308 @@
+---
+title: Node.js Express API Authorization Tutorial
+description: This tutorial demonstrates how to add API authorization to a Node.js Express application.
+topics:
+- quickstarts
+- server to server
+- api
+- authorization
+- nodejs
+- express
+contentType: tutorial
+useCase: quickstart
+type: server-to-server
+icon: i-devicon-express
+label: Express
+---
+This tutorial shows how to add authorization to Node.js Express API with PlusAuth. If you do not have a PlusAuth account, register from [here](https://dashboard.plusauth.com).
+
+{% alert %}
+This tutorial follows [plusauth-nodejs-backend-starter](https://github.com/PlusAuth/plusauth-nodejs-backend-starter) sample project on Github. You can download and follow the tutorial via the sample project.
+{% /alert %}
+
+## Create PlusAuth Client
+
+After you sign up or log in to PlusAuth, you need to create a client to get the necessary configuration keys in the dashboard.
+Go to [Clients](https://dashboard.plusauth.com/~clients) and create a client with the type of `Server to Server Application`
+
+## Configure Client
+
+### Get Client Properties
+
+You will need your `Client Id` and `Client Secret` for interacting with PlusAuth. You can retrieve them from the created client's details.
+
+## Configure APIs
+
+### Create API
+
+API is a definition in PlusAuth equals to your services which you want to secure. You need to create an API to add authorization to your app.
+Go to [Api's](https://dashboard.plusauth.com/~apis) and create a new API. Provide a name and audience to your api. `Audience` must be a URL that identifies your api, like `https://example.com/api`.
+
+### Create API Permissions
+After you create API, you can create permissions for it. Permissions allow you to define how resources can be accessed with a specific access token.
+Go to [Dashboard > Api's ](https://dashboard.plusauth.com/~apis) and click on the `Permissions` button on the row at the data table which contains your API.
+
+{% alert %}
+This tutorial uses `users:read`, `users:write`, `users:update` and `users:delete` permissions to secure resources
+{% /alert %}
+
+### Authorize Client
+Finally, authorize your client in your api to grant permissions. Go to [Dashboard > Api's ](https://dashboard.plusauth.com/~apis), then select your api and navigate to `Authorized Clients`.
+Add your client to the `Authorized Clients` list and grant permissions to it.
+
+## Configure Node.js to add Authorization
+
+Create a Node.js Express application or download the sample project from the link on the top of the page.
+
+### Install the dependencies
+
+To get started, install the following dependencies.
+
+* [body-parser](https://www.npmjs.com/package/body-parser) - Node.js body parsing middleware
+* [node-jsonwebtoken](https://github.com/auth0/node-jsonwebtoken) - JsonWebToken implementation for node.js
+* [jwks-rsa](https://www.npmjs.com/package/jwks-rsa) - Library to retrieve signing keys from a JWKS
+* [dotenv](https://www.npmjs.com/package/dotenv) - Module to load environment variables from a `.env` file
+
+```bash
+# installation with npm
+npm install body-parser jsonwebtoken jwks-rsa dotenv cors --save
+```
+
+### Create the .env file
+
+Create the `.env` file in the root of your app and add your PlusAuth variables and values to it.
+
+```properties
+# .env
+PLUSAUTH_ISSUER=https://<YOUR-TENANT-ID>.plusauth.com
+PLUSAUTH_AUDIENCE=<YOUR_AUDIENCE>
+PORT=3000
+```
+
+{% alert %}
+If you are following the sample project, rename `.env.example` to `.env` and replace the values accordingly.
+{% /alert %}
+
+### Configure Express Application
+We will configure our Express application in a simple way. We will be using `body-parser` for request body parsing middleware
+
+```js
+// server.js
+const express = require("express");
+
+(async () => {
+  const app = express();
+
+  app.use(cors());
+
+  // Enable the use of request body parsing middleware
+  app.use(bodyParser.json());
+  app.use(
+    bodyParser.urlencoded({
+      extended: true,
+    })
+  );
+
+})();
+```
+
+### Configure Authorization Middleware
+
+We will use `jsonwebtoken` and `jwks-rsa` to add authorization middleware.
+
+```js
+// checkJwt.js
+
+const jwksRsa = require('jwks-rsa');
+const jwt = require('jsonwebtoken');
+
+//jsonwebtoken options
+const options = {
+  audience: process.env.PLUSAUTH_AUDIENCE,
+  issuer: `${process.env.PLUSAUTH_ISSUER}`, // Validate the issuer
+  algorithms: ['RS256'], // Signing Algorithm
+};
+
+//jwks-rsa options
+const jwksClient = jwksRsa({
+  cache: true,
+  rateLimit: true,
+  jwksRequestsPerMinute: 5,
+  jwksUri: `${process.env.PLUSAUTH_ISSUER}/.well-known/jwks.json`, // Signing Keys Uri
+});
+
+function getKey(header, callback) {
+  jwksClient.getSigningKey(header.kid, function (err, key) {
+    var signingKey = key.publicKey || key.rsaPublicKey;
+    callback(null, signingKey);
+  });
+}
+
+module.exports = (scope = null) => {
+  return function (req, res, next) {
+    // If token not present in request header return 401
+    if (req.headers.authorization === undefined) {
+      return res.status(401).json({ message: 'token not found' });
+    }
+
+    // Get Bearer token
+    const token = req.headers.authorization.split(' ')[1];
+
+    jwt.verify(token, getKey, options, function (err, decoded) {
+      if (err) {
+        return res.status(401).json({ message: err.message }); // return 401 if token validation failed
+      }
+
+      if (!scope) {
+        // If scope not present for route, then return response since token validated successfully
+        next();
+      } else if (decoded.scope && decoded.scope.split(' ').includes(scope)) {
+        // If scope present for the route and token has required scope then return response
+        next();
+      } else {
+        // If scope present for the route but token doesn't have required scope then return 403
+        return res.status(403).json({ message: 'Insufficient scope' });
+      }
+    });
+  };
+};
+
+```
+
+`checkJwt` middleware looks for `access_token` in the request header. If the access token is not provided or not valid, the response status will be `401 Unauthorized`.
+In case token validation succeeds, the middleware checks for the requested scope as the second step. If the requested scope is not provided in the token, the response status will be `403 Forbidden`.
+
+{% alert %}
+You may have noticed that the `Audience` value defined in the [Create API](#create-api) section is used here.
+{% /alert %}
+
+
+### Create and Protect API Endpoints
+
+Finally, we will create API endpoints. We will be using `checkJwt` middleware here to validate jwt and check scopes for protecting resources with permissions.
+
+```js
+// server.js
+
+  // get users API endpoint (token requires users:read scope)
+  app.get('/users', checkJwt('users:read'), function (req, res) {
+    //send the response
+    res.status(200).send('All Users List');
+  });
+
+  // create user API endpoint (token requires users:write scope)
+  app.post('/users', checkJwt('users:write'), function (req, res) {
+    //send the response
+    res.status(200).send('New User Created');
+  });
+
+  // update user API endpoint (token requires users:update scope)
+  app.put('/users', checkJwt('users:update'), function (req, res) {
+    //send the response
+    res.status(200).send('User Updated');
+  });
+
+  // update user API endpoint (token requires users:delete scope)
+  app.delete('/users', checkJwt('users:delete'), function (req, res) {
+      //send the response
+      res.status(200).send('User Deleted');
+    }
+  );
+```
+
+## See it in action
+
+Start your app and follow the [Using API](#using-api) section to see it in action.
+
+## Using API
+
+You need to obtain an `access token` to call your API. This tutorial shows how `OAuth Client Credentials Flow` works for server-to-server communication where there is no user and login process.
+You will need your client's `Client Id` and `Client Secret` properties to acquire an access token in `Client Credentials Flow`.
+Also you must include `Audience` and `Scope` parameters to access your API.
+
+{% alert %}
+If you are looking for other authorization flows that require login and user, refer to [Regular Web Application](https://docs.plusauth.com/quickStart/web/) or [Single Page Application](https://docs.plusauth.com/quickStart/spa) quickstarts.
+{% /alert %}
+
+### Obtain Access Token
+
+You can obtain an access token using the command line or another application. Create a POST request and enter the required parameters.
+
+```bash
+# bash
+
+curl --request POST \
+  --url 'https://<YOUR_TANENT_ID>.plusauth.com/oauth2/token' \
+  --header 'content-type: application/x-www-form-urlencoded' \
+  --data 'grant_type=client_credentials' \
+  --data 'client_id=<YOUR_CLIENT_ID>' \
+  --data 'client_secret=<YOUR_CLIENT_SECRET>' \
+  --data 'audience=<YOUR_AUDIENCE>' \
+  --data 'scope=<SCOPE>'
+
+```
+
+You may have noticed that the values defined in [Configure Client](#configure-client) and [Configure APIs](#configure-apis) sections are used here. If you have used different
+values make sure to update this file accordingly.
+
+{% alert %}
+
+If you are following the sample project, your scope parameter needs to be set like following `users:read users:write users:update users:delete` in order to access the example API.
+{% /alert %}
+
+### Call Your API
+
+- **Calling Endpoint Without Access Token**
+
+If you request your protected endpoint without an access token, you will get a `401 Unauthorized` error response.
+
+```bash
+# bash
+
+> curl -i http://localhost:3000/users
+HTTP/1.1 401 Unauthorized
+Access-Control-Allow-Origin: *
+Content-Type: application/json; charset=utf-8
+Content-Length: 46
+Connection: keep-alive
+Keep-Alive: timeout=5
+```
+
+- **Calling Endpoint With Access Token**
+
+If you request your protected endpoint with a valid access token, you will get a `200 OK` response.
+
+```bash
+# bash
+
+> curl -i http://localhost:3000/users \
+-H "Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCIsImtpZCI6Inh4T3l2R0hWV3dCIsImtpZ..."
+HTTP/1.1 200 OK
+Access-Control-Allow-Origin: *
+Content-Type: text/html; charset=utf-8
+Content-Length: 14
+Connection: keep-alive
+Keep-Alive: timeout=5
+
+All Users List
+```
+
+If you request your protected endpoint with insufficient scope, you will get `403 Forbidden` error response.
+
+```bash
+# bash
+
+> curl -i http://localhost:3000/users \
+-H "Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCIsImtpZCI6Inh4T3l2R0hWV3dvc0dOMU9..."
+HTTP/1.1 403 Forbidden
+Access-Control-Allow-Origin: *
+WWW-Authenticate: Bearer scope="users:read", error="Insufficient scope"
+Content-Type: text/html; charset=utf-8
+Content-Length: 18
+Connection: keep-alive
+Keep-Alive: timeout=5
+
+Insufficient scope
+```
+
+As you see, the access token needs to have `users:read` scope to access the endpoint.

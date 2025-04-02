@@ -1,0 +1,260 @@
+---
+title: React Native Tutorial
+description: This tutorial demonstrates how to add user login, logout, and profile to a React Native application.
+topics:
+- quickstarts
+- native
+- login
+- user profile
+- logout
+- react
+- react native
+- android
+type: native
+contentType: tutorial
+useCase: quickstart
+icon: i-devicon-react
+label: React Native
+---
+This tutorial shows how to use PlusAuth with React Native Application. If you do not have a PlusAuth account, register from [here](https://dashboard.plusauth.com).
+
+{% alert %}
+This tutorial follows the [plusauth-react-native-starter](https://github.com/PlusAuth/plusauth-react-native-starter) sample project on Github. You can download and follow the tutorial via the sample project.
+{% /alert %}
+
+## Create PlusAuth Client
+
+After you sign up or log in to PlusAuth, you need to create a client to get the necessary configuration keys in the dashboard.
+Go to [Clients](https://dashboard.plusauth.com/~clients) and create a client with the type of `Native Application`
+
+
+## Configure Client
+### Get Client Properties
+
+You will need your `Client Id` for interacting with PlusAuth. You can retrieve them from the created client's details.
+
+### Configure Redirect and Logout URIs
+When PlusAuth authenticates a user, it needs a URI to redirect back. That URI must be in your client's `Redirect URI` list.
+If your application uses a redirect URI that is not white-listed in your PlusAuth Client, you will receive an error.
+
+The same thing applies to the logout URIs. After the user logs out, you need a URI to be redirected.
+
+
+{% alert %}
+If you are following the sample project, the Redirect URL you need to add to the Redirect URIs field is *`com.plusauth.reactnativeexample:/oauthredirect/login`*.
+The Logout URL you need to add to the Post Logout Redirect URIs field is *`com.plusauth.reactnativeexample:/`*.
+{% /alert %}
+
+## Configure React Native to use PlusAuth
+Create a React Native application or download the sample project from the link on the top of the page.
+
+```bash
+# Create the application using the npx and react-native.
+npx react-native init plusauth-react-native-starter
+```
+
+### Install OIDC Client
+For interacting with PlusAuth it is advised to use an OpenID Connect library.
+In this tutorial, we will be using the `react-native-app-auth` library. However, you could use any other OpenID Connect library.
+
+```bash
+npm install react-native-app-auth --save
+```
+
+{% alert %}
+`react-native-app-auth` is a React Native bridge for [AppAuth-iOS](https://github.com/openid/AppAuth-iOS) and
+[AppAuth-Android](https://github.com/openid/AppAuth-Android) SDKs for communicating with OAuth 2.0 and OpenID Connect providers.
+You can find source code on [Github](https://github.com/FormidableLabs/react-native-app-auth).
+{% /alert %}
+
+### Android Setup
+
+Add redirect scheme to your Android app module's `build.gradle` file.
+
+```groovy
+...
+android {
+    ...
+    defaultConfig {
+        ...
+        manifestPlaceholders += [
+                'appAuthRedirectScheme': '<your_custom_scheme>' // ex: com.plusauth.reactnativeexample
+        ]
+    }
+}
+```
+
+### iOS Setup
+
+Follow the [iOS Setup instructions](https://github.com/FormidableLabs/react-native-app-auth#ios-setup) in `React Native AppAuth` docs.
+
+{% alert %}
+If you are following the sample project, go to the `ios` folder and perform `pod install`. Other steps are completed in the project.
+{% /alert %}
+
+### Configure OIDC Client
+
+We need to initialize our React Native AppAuth library to handle authentication-related operations. Create a new `config` instance in `App.js`.
+
+```js
+// App.js
+
+const config = {
+  issuer: 'https://<PLUSAUTH_TENANT_ID>.plusauth.com',
+  clientId: '<PLUSAUTH_CLIENT_ID>',
+  redirectUrl: 'com.plusauth.reactnativeexample:/oauthredirect/login',
+  postLogoutRedirectUrl: 'com.plusauth.reactnativeexample:/',
+  scopes: ['openid', 'profile', 'email', 'offline_access']
+}
+```
+Replace `clientId` value with your `Client Id` defined in the [Configure Client](#configure-client) section. Also change the `issuer` value with your `Tenant Id`.
+
+{% alert %}
+If you are following the sample project, rename `plusauth-env.example.js` to `plusauth-env.js` and replace the values accordingly.
+{% /alert %}
+
+{% alert type="warning" %}
+If you set your custom scheme other than `com.plusauth.reactnativeexample`, replace the `_redirectUrl` and `_postLogoutRedirectUrl` values accordingly.
+{% /alert %}
+
+## Implement login, user profile, and logout
+
+Add the following sections to your `App.js` file under the root of your project.
+
+Before implement `login` action, create an `authState` object to store the retrieved `tokens`.
+```js
+// App.js
+
+const defaultAuthState = {
+  accessToken: '',
+  accessTokenExpirationDate: '',
+  refreshToken: '',
+  idToken: ''
+}
+
+const [authState, setAuthState] = useState(defaultAuthState)
+// Create isLoggedIn state to check if user logged in
+const [isLoggedIn, setIsLoggedIn] = useState(false)
+// Create profileInfo state to store authenticated user's profile
+const [profileInfo, setProfileInfo] = useState(null)
+```
+
+### Add Login
+
+We will be using the `authorize` method to authenticate the user. The application redirects you to the `PlusAuth` login page using the browser.
+
+Add the following section to your `App.js` file to start an authentication process.
+
+```js
+// App.js
+
+const login = async () => {
+  try {
+    // Redirect PlusAuth Login page to authenticate user
+    const result = await authorize(config)
+    setAuthState(result)
+    setIsLoggedIn(true)
+  } catch (error) {
+    console.error(error)
+  }
+}
+```
+
+### Get Authenticated User Info
+
+You can get authenticated user info by adding the following section:
+
+```js
+// App.js
+
+ const getProfileInfo = async () => {
+  try {
+    // Get authenticated user info
+    const response = await fetch(
+      'https://<PLUSAUTH_TENANT_ID>.plusauth.com/oidc/userinfo',
+      {
+        method: 'GET',
+        headers: {
+          Authorization: 'Bearer ' + authState.accessToken // use retrieved access token
+        }
+      }
+    )
+    const json = await response.json()
+    setProfileInfo(json)
+  } catch (error) {
+    console.error(error)
+  }
+}
+```
+
+{% alert type="warning" %}
+Add retrieved `access_token` to your request's header with the `Authorization` key to get user info from _PlusAuth_. Otherwise, you will get a `401 Unauthorized` error response.
+{% /alert %}
+
+### Add Logout
+
+Add the following section to log out from the application and PlusAuth:
+
+```js
+// App.js
+
+const signOut = async () => {
+  try {
+    // Logout session from PlusAuth
+    await logout(config, {
+      idToken: authState.idToken,
+      postLogoutRedirectUrl: config.postLogoutRedirectUrl
+    })
+    // Clear local session state
+    setAuthState(defaultAuthState)
+    setIsLoggedIn(false)
+    setProfileInfo(null)
+  } catch (error) {
+    console.error(error)
+  }
+}
+```
+Clear all the tokens after the successful logout process.
+
+### Add View
+
+Finally, add the following section to your `App.js` to interact with the user.
+
+```js
+// App.js
+
+// ...
+
+return (
+  <SafeAreaView>
+    <AppBar />
+    <View>
+      <Text>
+        Welcome to PlusAuth React Native Demo!
+      </Text>
+      <Text>
+        Username: {profileInfo === null ? '-' : profileInfo.username}
+      </Text>
+      <View>
+        {!isLoggedIn ? (
+          <Button title="Login" color="#2196F3" onPress={() => login()} />
+        ) : (
+          <>
+            <Button color="#2196F3" title="Get Profile Info" onPress={() => getProfileInfo()} />
+            <View>
+              <Button color="#D32F2F" title="Logout" onPress={() => signOut()} />
+            </View>
+            <Text>
+              {profileInfo === null ? '' : JSON.stringify(profileInfo)}
+            </Text>
+          </>
+        )}
+      </View>
+    </View>
+  </SafeAreaView>
+)
+```
+
+## See it in action
+
+That's it. Start your app and point to your device or emulator. Follow the **Log In** link to log in or sign up to your PlusAuth tenant. After you click the `Login` button, the browser launches and shows the PlusAuth Login page. Upon successful login or signup, you should be redirected back to the application.

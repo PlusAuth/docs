@@ -37,7 +37,7 @@ Hash Algorithm: >-
   algorithms are widely used in computer science for various purposes, including data
   integrity verification, password hashing, and digital signatures.
 
-Id Token: >- 
+Id Token: >-
   An ID Token is a compact, digitally-signed JSON web token (JWT) issued by
   an OpenID Connect Provider (OP) during the authentication process. It contains identity
   information about the authenticated user, such as their unique identifier and other
@@ -49,7 +49,7 @@ Identity Provider (IdP): >-
   A service that manages and verifies user identities, often
   used for single sign-on (SSO) solutions.
 
-JSON Web Key Set (JWKS): >- 
+JSON Web Key Set (JWKS): >-
   It is a JSON (JavaScript Object Notation) data structure that represents a set of cryptographic keys in
   a standardized format. JWKS is commonly used in the context of JSON Web Tokens
   (JWTs) and various web security protocols.
@@ -72,7 +72,7 @@ OpenID Connect: >-
   making it a comprehensive framework for user authentication and information sharing in a
   decentralized and interoperable manner.
 
-Password Hash Function: >- 
+Password Hash Function: >-
   A type of cryptographic hash function specifically designed
   for securing passwords. It takes a user's password as input and produces a fixed-size
   string of characters, known as the password hash. The primary goal of using password
@@ -81,7 +81,7 @@ Password Hash Function: >-
   stored hash values. This helps enhance the security of user accounts and sensitive
   information in the event of a data breach or unauthorized access.
 
-Password Policy: >- 
+Password Policy: >-
   A set of rules and requirements governing the creation and use of
   passwords for user accounts.
 
@@ -100,20 +100,19 @@ Role Based Access Control (RBAC): >-
   A system that restricts system access based on the
   roles of individual users within an organization.
 
-SAML:
-  An XML-based open standard for exchanging authentication and authorization data between parties,
+SAML: An XML-based open standard for exchanging authentication and authorization data between parties,
   typically between an identity provider (IdP) and a service provider (SP). SAML enables single sign-on (SSO)
-  functionality, allowing a user to log in once to access multiple applications without the need for separate 
-  credentials for each application. It operates by exchanging XML-formatted security assertions that 
+  functionality, allowing a user to log in once to access multiple applications without the need for separate
+  credentials for each application. It operates by exchanging XML-formatted security assertions that
   contain information about a user's identity and their authentication status. SAML is widely used
   in web-based authentication scenarios, promoting interoperability and secure information exchange in
   a federated identity environment.
 
-Session Management: >- 
+Session Management: >-
   The control and monitoring of user sessions to ensure secure and
   efficient access to the platform.
 
-Single Sign-On (SSO): >- 
+Single Sign-On (SSO): >-
   A mechanism that allows users to authenticate once and access
   multiple applications without the need to log in again.
 
@@ -123,7 +122,7 @@ Tenant: >-
   This isolation ensures that the resources and data associated with one tenant are segregated from those of 
   other tenants, providing security and privacy.
 
-Token: >- 
+Token: >-
   A piece of data representing the authorization granted to a user for accessing
   a resource.
 
@@ -136,11 +135,10 @@ WebAuthN: >-
   It provides a secure and standardized method for users to authenticate 
   to web applications using public key cryptography.
 
-Web Services Federation (WSFed):
-  A protocol used for federated identity and single sign-on (SSO) in web applications.
-  It is based on web services and allows different organizations to share user authentication 
-  and authorization information. With WS-Federation, a user can log in to one web application 
+Web Services Federation (WSFed): A protocol used for federated identity and single sign-on (SSO) in web applications.
+  It is based on web services and allows different organizations to share user authentication
+  and authorization information. With WS-Federation, a user can log in to one web application
   and then access other applications within the federation without the need to re-enter credentials.
-  This protocol relies on XML-based security tokens and helps establish trust relationships between 
+  This protocol relies on XML-based security tokens and helps establish trust relationships between
   identity providers and service providers, enabling a seamless and secure user experience
   across multiple web applications within a federation.

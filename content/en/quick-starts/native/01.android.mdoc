@@ -1,0 +1,324 @@
+---
+title: Android Tutorial
+description: This tutorial demonstrates how to add user login, logout, and profile to a Native Android application.
+topics:
+- quickstarts
+- native
+- login
+- user profile
+- logout
+- android
+- java android
+type: native
+contentType: tutorial
+useCase: quickstart
+icon: i-devicon-android
+label: Android
+navigation:
+  icon: i-devicon-android
+
+---
+This tutorial shows how to use PlusAuth with Native Android Application. If you do not have a PlusAuth account, register from [here](https://dashboard.plusauth.com).
+
+{% alert %}
+This tutorial follows the [plusauth-android-starter](https://github.com/PlusAuth/plusauth-android-starter) sample project on Github. You can download and follow the tutorial via the sample project.
+{% /alert %}
+
+## Create PlusAuth Client
+
+After you sign up or log in to PlusAuth, you need to create a client to get the necessary configuration keys in the dashboard.
+Go to [Clients](https://dashboard.plusauth.com/~clients) and create a client with the type of `Native Application`
+
+
+## Configure Client
+### Get Client Properties
+
+You will need your `Client Id` for interacting with PlusAuth. You can retrieve them from the created client's details.
+
+### Configure Redirect and Logout URIs
+When PlusAuth authenticates a user, it needs a URI to redirect back. That URI must be in your client's `Redirect URI`
+list. If your application uses a redirect URI that is not white-listed in your PlusAuth Client, you will receive an error.
+
+The same thing applies to the logout URIs. After the user logs out, you need a URI to be redirected.
+
+
+{% alert %}
+If you are following the sample project, the Redirect URL you need to add to the Redirect URIs field is *`com.plusauth.androidexample:/callback`*.
+The Logout URL you need to add to the Post Logout Redirect URIs field is the same as the Redirect URI field that is *`com.plusauth.androidexample:/callback`*.
+{% /alert %}
+
+## Configure Android to use PlusAuth
+Create an Android application or download the sample project from the link on the top of the page. In this tutorial, we will be using [plusauth-oidc-android](https://github.com/PlusAuth/plusauth-oidc-android)
+but you could use any OpenID Connect library.
+
+Before starting to configure your application, make sure that `android.permission.INTERNET` permission is added to your `AndroidManifest.xml` file.
+
+```xml
+<uses-permission android:name="android.permission.INTERNET" />
+```
+
+### Add Dependencies
+
+Add following dependencies to your app's `build.gradle` file:
+
+```groovy
+dependencies {
+  implementation 'androidx.appcompat:appcompat:1.2.0'
+  implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+  implementation 'com.plusauth.android:oidc:0.1.10'
+  // ... other libraries
+}
+```
+
+{% alert %}
+`plusauth-oidc-android` is an OpenID Connect (OIDC) and OAuth2 library for native Android applications. You can find source code and documentation on [Github](https://github.com/PlusAuth/plusauth-oidc-android).
+{% /alert %}
+
+Do not forget to add `compileOptions` to the `build.gradle` file to use Java 8 or higher as the target Java version.
+
+```groovy
+android {
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_1_8
+    targetCompatibility JavaVersion.VERSION_1_8
+  }
+}
+```
+
+### Configure PlusAuth OIDC Client
+
+We need to initialize our OIDC Client library to handle authentication-related operations. Create `PlusAuthInstance.java` in the root folder. Configure `plusauth-oidc-android` as follows:
+
+```java
+// com/plusauth/androidexample/PlusAuthInstance.java
+
+public class PlusAuthInstance {
+
+  private static OIDC plusAuth;
+
+  public static OIDC get(Context context) {
+    if (plusAuth == null) {
+      plusAuth = OIDCBuilder(context, "<YOUR_CLIENT_ID>", "https://<YOUR_TENANT_ID>.plusauth.com")
+              .setLoggingEnabled(true)
+              .build();
+    }
+    return plusAuth;
+  }
+}
+```
+
+You may have noticed that the `Client Id` defined in the [Configure Client](#configure-client) section is used here. If you have used different
+value make sure to update this file accordingly.
+
+## Implement login, user profile, and logout
+
+We will be adding activities to interact with `PlusAuth Instance`. Do not forget to add the following activities to your `AndroidManifest.xml` file.
+
+### Create Login Activity
+
+Create `LoginActivity.java` that is our main activity at the root of the project. Create a PlusAuth client instance and initialize it.
+
+```java
+// com/plusauth/androidexample/LoginActivity.java
+
+public class LoginActivity extends AppCompatActivity {
+
+    private static final String TAG = "LoginActivity";
+    Button buttonLogin, buttonLogout, buttonProfile;
+    TextView usernameTextview;
+    OIDC plusAuth;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_login);
+
+        // Create PlusAuth instance to initialize auth
+        plusAuth = PlusAuthInstance.get(this);
+    }
+}
+```
+
+Add the following section to your activity to make a login request to PlusAuth:
+
+```java
+// LoginActivity.java
+
+// Make a login request with scopes
+plusAuth.login(this, new LoginRequest().setScope("openid profile email"), new AuthenticationCallback() {
+    @Override
+    public void onSuccess(Credentials credentials) {
+        Log.d(TAG, "User Authenticated");
+    }
+
+    @Override
+    public void onFailure(AuthenticationException e) {
+        Log.e(TAG, "Login failed", e);
+    }
+});
+```
+
+You can get authenticated user info by adding the following section:
+
+```java
+// LoginActivity.java
+
+if(plusAuth.getCredentialsManager().hasValidCredentials()) {
+    plusAuth.getApi().userInfo().call(new PACallback<UserProfile, AuthenticationException>() {
+        @Override
+        public void onSuccess(UserProfile userProfile) {
+            Log.d(TAG, "UserInfo: " + userProfile.toString());
+        }
+
+        @Override
+        public void onFailure(AuthenticationException e) {
+            Log.e(TAG, "User Info request failed", e);
+        }
+    });
+}
+```
+
+Finally, add the following section to your activity to log out from the application and PlusAuth:
+
+```java
+// LoginActivity.java
+
+plusAuth.logout(this, new LogoutRequest(), new VoidCallback() {
+    @Override
+    public void onSuccess(Void aVoid) {
+        Log.d(TAG, "User logged out successfully");
+    }
+
+    @Override
+    public void onFailure(AuthenticationException e) {
+        Log.e(TAG, "Logout failed", e);
+    }
+});
+```
+
+Now create `activity_login.xml` file under `res/layout` folder.
+
+```xml
+<!-- res/layout/activity_login.xml -->
+
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"  xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+
+
+    <!-- Add Toolbar -->
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="64dp">
+
+        <TextView
+            android:id="@+id/title_plusauth"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Welcome to PlusAuth Android Demo!" />
+
+        <TextView
+            android:id="@+id/textview_username"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/title_plusauth" />
+
+        <!-- Add other views of activity-->
+
+    </RelativeLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+```
+
+### Create Profile Activity
+
+Create `ProfileActivity.java` at the root of the project.
+
+```java
+// com/plusauth/androidexample/ProfileActivity.java
+
+public class ProfileActivity extends AppCompatActivity {
+
+    private static final String TAG = "ProfileActivity";
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_profile);
+
+        // Get PlusAuth instance
+        OIDC plusAuth = PlusAuthInstance.get(this);
+        Button backButton = findViewById(R.id.button_back);
+        TextView userInfoTextview = findViewById(R.id.textview_user_info);
+
+        plusAuth.getApi().userInfo().call(new PACallback<UserProfile, AuthenticationException>() {
+            @Override
+            public void onSuccess(UserProfile userProfile) {
+                runOnUiThread(() -> {
+                    userInfoTextview.setText(userProfile.toString());
+                });
+            }
+
+            @Override
+            public void onFailure(AuthenticationException e) {
+                Log.e(TAG, "Could not get profile", e);
+            }
+        });
+
+        backButton.setOnClickListener(v -> {
+            finish();
+        });
+    }
+}
+```
+
+Finally, create the `activity_profile.xml` file under the `res/layout` folder.
+
+```xml
+<!-- res/layout/activity_profile.xml -->
+
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent" android:layout_height="match_parent" >
+
+    <!-- Add Toolbar -->
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="64dp">
+
+        <TextView
+            android:id="@+id/textview_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="USER PROFILE"  />
+
+        <TextView
+            android:id="@+id/textview_user_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/textview_title"
+            android:layout_margin="16dp"
+            tools:text="[account information]" />
+
+        <Button
+            android:id="@+id/button_back"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="24dp"
+            android:layout_centerHorizontal="true"
+            android:text="Go Back" />
+
+    </RelativeLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+```
+
+## See it in action
+
+That's it. Start your app and point to your device or emulator. Follow the **Log In** link to log in or sign up to your PlusAuth tenant. After you click the `Login` button, the browser launches and shows the PlusAuth Login page. Upon successful login or signup, you should be redirected back to the application.

@@ -1,0 +1,217 @@
+---
+title: Push Enrollment
+layout:
+  title: false
+---
+<article class="max-w-4xl mx-auto">
+
+  <h2 class="mt-0">Push Enrollment Flow</h2>
+
+  Here is the sequence diagram displays the flow of when a user tries to login with push notification or faces with Push MFA.
+
+  {% mermaid  %}
+``` {% process=false %}
+  sequenceDiagram
+      participant User
+      participant Authenticator App
+      participant PlusAuth
+      User-->>+PlusAuth: signin
+      alt User does not have push credentials
+          PlusAuth->>User: (1) Displays QRCode
+          User->>+Authenticator App: Scans QrCode
+          Authenticator App->>-PlusAuth: (2) [POST] /push-authenticator/enroll
+          User->>PlusAuth: Clicks to continue
+      end
+      PlusAuth-->>Authenticator App: (3) Send Push Notification to all registered devices
+      alt type = "code"
+          Authenticator App-->>User: Display numbers to choose from
+          User->>Authenticator App: Selects number
+          Authenticator App->>PlusAuth: (4) [POST] /push-authenticator/resolve
+      else type = "prompt"
+          Authenticator App-->>User: Prompt user to accept/reject
+          User->>Authenticator App: Answers prompt
+          Authenticator App->>PlusAuth: (4) [POST] /push-authenticator/resolve
+      end
+      PlusAuth-->>-User: signin success
+```
+  {% /mermaid %}
+
+
+  ## Flow Steps
+  ### 1) QRCode contents
+  QRCode is composed of an uri consisting several parameters. For offline validation,
+  push enrollment also behaves as TOTP authenticator.
+
+  Other than TOTP parameters, QRCode uri would contain `context_token` and `enrollment_url` field.
+
+  Here is an example:
+  ```uri
+  otpauth://push/MyApp:john@doe.com?issuer=MyApp&secret=SOMESECRET&algorithm=SHA256&digits=6&period=30&context_token=SOME_TOKEN&enrollment_url=https%3A%2F%2Fmytenant.plusauth.com%2Fpush-authenticator%2Fenroll
+  ```
+
+  ### 2) Enrollment Request
+
+  After QRCode is scanned, authenticator application should enroll the user to PlusAuth.
+
+  For enrollment Authenticator application must satisfy these requirements:
+  - A JWK KeyPair for validation of context signature
+  - Have a unique device identifier (Usually generated in first installation)
+  - Is registered to push service (gcm or apns)
+
+  Here is the enrollment request:
+
+  {% alert %}
+  Public and private key must be in JWK format.
+  {% /alert %}
+
+  ```shell
+  curl --request POST \
+    --url 'https://{{TENANT_ID}}.plusauth.com/push-authenticator/enroll' \
+    --header 'User-Agent: {{USER_AGENT}}' \
+    --header 'Authorization: Bearer {{CONTEXT_TOKEN}}' \
+    --header 'Content-Type: application/json' \
+    --data '{
+    "public_key": {  },
+    "private_key": {  },
+    "device_identifier": "{{UNIQUE_DEVICE_ID}}",
+    "credentials": {
+      "service": "fcm",
+      "device_token": "{{FIREBASE_TOKEN}}"
+    }
+  }'
+
+  ```
+
+  ### 3) Push Notification Content
+  Push Notifications sent by PlusAuth will have an empty title and content but in its payload there will be a `context` field.
+  The `context` value is a JWT signed with the private key provided in the enrollment request.
+
+  {% alert %}
+  Before checking the contents of the JWT make sure you have verified
+  signature with the public key on your device.
+  {% /alert %}
+
+  Here is an example of the attributes inside JWT:
+
+  {% alert type="warning" %}
+  Nested json values can be empty or `null`. For example, in some cases `settings.bind_sim`, `info.agent` or `info.agent.device` can be undefined or null.
+  Make sure you check the existence of the key before you try to access them
+  {% /alert %}
+
+  {% code-group %}
+  ```json5 {% title="Common Properties" frame="code" %}
+  {
+    "exp": 1702250257,
+    "iat": 1702243057,
+    "context_token": "CONTEXT_TOKEN",
+    "resolve_url": "https://mytenant.plusauth.com/push-authenticator/resolve",
+    "settings": {
+      "bind_sim": false
+    },
+    "info": {
+      "application": "Application Name",
+      "ip": "127.0.0.1",
+      "user_identifier": "john@doe.com", // Could be phone number or username or any other user property
+      "agent": {
+        "ua": "",
+        "browser": {
+          "name": "",
+          "version": "",
+          "major": ""
+        },
+        "cpu": {
+          "architecture": ""
+        },
+        "device": {
+          "type": "",
+          "vendor": "",
+          "model": ""
+        },
+        "engine": {
+          "name": "",
+          "version": ""
+        },
+        "os": {
+          "name": "",
+          "version": ""
+        }
+      },
+      "location": {
+        "city": "Istanbul", // English city name
+        "country": "TUR", // Country ISO Code
+        "postal_code": "34000", // Postal code of location
+        "coordinates": {
+          "accuracy_radius": 1,
+          "latitude": 41.091384,
+          "longitude": 29.062315,
+          // The time zone associated with location, as specified by the IANA Time Zone Database
+          "time_zone": "Europe/Istanbul"
+        }
+      }
+    }
+  }
+  ```
+  ```json5 {% title="When type is \"code\"" frame="code" %}
+  {
+    "type": "code",
+    "values": [ "83", "21", "12" ]
+  }
+  ```
+  ```json5 {% title="When type is \"prompt\"" frame="code" %}
+  {
+    "type": "prompt"
+  }
+  ```
+  {% /code-group %}
+
+
+  #### Settings
+  If settings object contains `bind_sim` value and it is set to `true` the authenticator application should prevent receiving
+  push notification or generating otp code if end-user's SIM card changes.
+
+  You can use fields `details.is_sim_bound` and `details.sim_card_identifiers` per-account in account scheme.
+  See related api docs from [Accounts / Save Account](/api/auth-plus/accounts/save-account)
+
+  ### 4) Resolving Push Interaction
+  After user interacts with push notification (answers prompt or selects code),
+  authenticator application must inform PlusAuth with the interaction result.
+
+  To do so, application must create a **JWT** signed with **private key**
+  and with corresponding claim containing the action response.
+
+  Your JWT must contain following claims depending on the push notification type:
+
+{% code-group %}
+  ```json5 {% title="Common values" frame="code" %}
+  {
+     // If user rejects interaction
+    "reject_reason": "ignore", // or "fraud_suspicion"
+  }
+  ```
+  ```json5 {% title="When type is \"code\"" frame="code" %}
+  {
+    "selected_value": "{{SELECTED_VALUE}}",
+  }
+  ```
+  ```json5 {% title="When type is \"prompt\"" frame="code" %}
+  {
+    "response": "accepted", // or "rejected",
+  }
+  ```
+{% /code-group %}
+
+
+  Here is the responding request:
+
+  ```shell
+  curl --request POST \
+    --url 'https://{{TENANT_ID}}.plusauth.com/push-authenticator/resolve-challenge' \
+    --header 'User-Agent: {{USER_AGENT}}' \
+    --header 'Authorization: Bearer {{CONTEXT_TOKEN}}' \
+    --header 'Content-Type: application/json' \
+    --data '{
+    "context": "{{GENERATED_JWT}}",
+    "device_identifier": "{{UNIQUE_DEVICE_ID}}"
+  }'
+  ```
+</article>

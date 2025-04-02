@@ -15,16 +15,16 @@
     "*.{md,mdx}": "eslint"
   },
   "devDependencies": {
-    "eslint": "^9.9.1",
+    "eslint": "^9.19.0",
     "eslint-plugin-mdx": "^3.1.5",
-    "husky": "^9.1.5",
-    "lint-staged": "^15.2.10",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.4.3",
     "remark-cli": "^12.0.1",
-    "remark-directive": "^3.0.0",
+    "remark-directive": "^3.0.1",
     "remark-frontmatter": "^5.0.0",
-    "remark-lint-list-item-indent": "^4.0.0",
-    "remark-preset-lint-consistent": "^6.0.0",
-    "remark-preset-lint-recommended": "^7.0.0"
+    "remark-lint-list-item-indent": "^4.0.1",
+    "remark-preset-lint-consistent": "^6.0.1",
+    "remark-preset-lint-recommended": "^7.0.1"
   },
   "remarkConfig": {
     "settings": {

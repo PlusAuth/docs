@@ -1,0 +1,60 @@
+---
+title: "Brute-Force Protection"
+meta_title: "Brute-Force Protection"
+meta_description: "PlusAuth provides configurable brute-force protection without
+— any hassle."
+
+keywords:
+  - concepts
+  - plusauth
+  - security
+  - brute-force
+  - protection
+  - user credentials
+  - login
+  - login security
+---
+
+PlusAuth allows you to customize brute-force attack protection according to your requirements.
+
+Brute force attacks are simple and reliable. In this type of attack, an attacker submits many passwords or passphrases with
+the hope of eventually guessing a combination correctly. The attacker systematically checks
+all possible passwords and passphrases until the correct one is found. As you can guess, this process is
+handled by computers. In a simple environment, thousands of passwords could be checked in a couple of seconds.
+
+Brute-Force attack protection is enabled by default, and you can configure or disable it according to your requirements.
+
+{% alert type="warning" %}
+It is highly discouraged to disable brute-force attack protection.
+{% /alert %}
+
+To customize brute-force protection, go to [Dashboard > Security](https://dashboard.plusauth.com/#policies)
+and expand the **Brute-Force Protection** section.
+
+## Configuration
+
+| Field | Description |
+| --- | --- |
+| Enabled | Enable/Disable Brute-Force Protection |
+| Send Notification | If this is enabled, your users will receive an email informing them about the login attempt from the blocked IP after all attempts are exhausted.  **Blocked IP** template will be used for this email. |
+| Maximum Allowed Attempts | Maximum count for a user to consecutively fail logins for the same IP.  |
+| Duration | Attempts will be counted for the specified seconds.  |
+| Block Duration | How many seconds should PlusAuth block the IP for the specified user.  |
+| IP WhiteList | List of IP's should be ignored from brute-force protection  |
+
+For example, with following configuration
+```shell
+Send Notification = true
+Maximum Attempts = 10
+Duration = 3600 (1 hour in seconds)
+Block Duration = 2592000(30 Days in seconds)
+```
+if a user fails to login to their account consecutively 10 times *(Maximum Allowed Attempts)* in an
+hour *(Duration)* from the same IP, their account will be blocked for 30 days *(Block Duration)*, and
+they will receive configured **Blocked IP** email.
+
+## Example Scenarios
+Although it is advised to configure brute-force with low attempts and high durations, some would like to configure
+it in a less strict way.
+
+For example, some would like to allow trying again in short duration rather than having long block durations.

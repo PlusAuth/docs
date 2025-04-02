@@ -1,0 +1,58 @@
+---
+title: Authorization
+layout:
+  title: false
+  toc: false
+---
+
+<article class="grid lg:grid-cols-2 gap-12">
+<section>
+  <h2 class="mt-0">Authorization</h2>
+
+  Being as identity and access management solution PlusAuth also uses itself for authentication.
+  For using the Api you must have an access token retrieved from PlusAuth. Be aware that access tokens hold
+  your privileges so make sure to keep them safe.
+
+  PlusAuth Rest API protected by [OAuth 2.0](https://tools.ietf.org/html/rfc6749) and you
+  can access it with [Bearer](https://tools.ietf.org/html/rfc6750) tokens.
+
+  API requests that made over HTTP will be redirected to corresponding HTTPS endpoint.
+  Depending on your http client those redirects may fail, so make sure you use HTTPS instead of HTTP.
+
+  You can retrieve tokens by using [OAuth 2.0 flows](https://tools.ietf.org/html/rfc6749#section-4).
+
+  {% alert %}
+  Auth Plus API expects tokens to be granted to the user himself.
+  That means you cannot use `Client Credentials` flow which results in machine to machine tokens.
+  {% /alert %}
+
+  {% alert %}
+  Make sure you have granted the permissions to client as it described in [Core Authorization](/en/api/core/authorization#client-configuration).
+  {% /alert %}
+
+  </section>
+
+  <section>
+
+  {% request-snippet
+    title="Retrieve Token with OAuth2 Resource Owner Password Grant"
+    alert="Make sure your client has `password` grant type enabled."
+  %}
+  curl --request POST \
+      --url https://{{TENANT_ID}}.plusauth.com/oauth2/token \
+      --header 'Content-Type: application/x-www-form-urlencoded' \
+      --data-urlencode 'client_id={{CLIENT_ID}}' \
+      --data-urlencode 'client_secret={{CLIENT_SECRET}}' \
+      --data-urlencode 'grant_type=password' \
+      --data-urlencode 'audience=https://{{TENANT_ID}}.plusauth.com/api/' \
+      --data-urlencode 'scope={{SPACE_SEPARATED_SCOPES}}' \
+      --data-urlencode 'username={{USERNAME}}' \
+      --data-urlencode 'password={{PASSWORD}}'
+  {% /request-snippet %}
+
+  </section>
+
+</article>
+
+
+

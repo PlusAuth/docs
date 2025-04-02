@@ -1,0 +1,81 @@
+---
+title: Introduction
+layout:
+  title: false
+---
+
+<article class="max-w-4xl mx-auto">
+<h1 class="mt-0">PlusAuth Web API Reference</h1>
+
+This API is intended to be used in PlusAuth views (Sign in, Register, etc.). Default views
+in PlusAuth uses [PlusAuth Widget library](https://github.com/PlusAuth/plusauth-widget). For your own custom views
+you need to make required requests to the corresponding endpoints.
+
+{% alert type="warning" %}
+If you are going to make requests with XHR/Fetch make sure to include credentials as endpoints in this API mostly depend on user session.
+{% /alert %}
+
+{% alert %}
+Some requests may respond with a redirection. If you are dispatching requests with XHR/Fetch like clients
+make sure you redirect to given location.
+In such situations if your request contains `X-Requested-With` header with the value `XMLHttpRequest`,
+PlusAuth will return a JSON response instead of redirect.
+<br/>
+<br/>
+Here is an example response:
+
+```json
+{
+  "error": "xhr_request",
+  "error_description": "You need to redirect to the given location.",
+  "location": "https://somelocation"
+}
+```
+{% /alert %}
+
+{% code-group %}
+```javascript {% title="Fetch" frame="code" %}
+const result = await fetch("/signin", {
+  method: "POST",
+  credentials: "include",
+  headers: {
+    "Content-Type": "application/json",
+    "X-Requested-With": "XMLHttpRequest"
+  },
+  body: JSON.stringify(data),
+})
+
+if ( result.status === 400 && response.headers.get( 'content-type' ).includes('application/json') ){
+  const parsedResponse = await result.json()
+  if ( parsedResponse.error === 'xhr_request' && parsedResponse.location ) {
+    window.location.replace( parsedResponse.location );
+    return false;
+  } else {
+    // handle other errors
+  }
+}
+```
+```javascript {% title="Axios" frame="code"  %}
+try{
+  axios.post("/signin", data, {
+    headers: {
+      "Content-Type": "application/json",
+      "X-Requested-With": "XMLHttpRequest"
+    },
+    withCredentials: true
+  })
+}catch (error) {
+  if (error.response && error.response.status === 400){
+    if ( error.response.data.error === 'xhr_request' && error.response.data.location ) {
+      window.location.replace( error.response.data.location );
+      return false;
+    } else {
+      // handle other errors
+    }
+  }
+}
+```
+{% /code-group %}
+
+
+</article>

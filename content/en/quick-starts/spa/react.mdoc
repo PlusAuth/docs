@@ -1,0 +1,506 @@
+---
+title: React Tutorial
+description: This tutorial demonstrates how to add user login, logout, and profile to a React application.
+topics:
+  - quickstarts
+  - single-page-application
+  - login
+  - user profile
+  - logout
+  - react
+  - reactjs
+type: spa
+icon: i-devicon-react
+label: React
+---
+
+This tutorial shows how to use PlusAuth with [React](https://reactjs.org/) Single Page Application. If you do not have a PlusAuth account, register from [here](https://dashboard.plusauth.com).
+
+{% alert %}
+This tutorial follows [plusauth-react-starter](https://github.com/PlusAuth/plusauth-react-starter) sample project on Github. You can download and follow the tutorial via the sample project.
+{% /alert %}
+
+## Create PlusAuth Client
+
+After you sign up or log in to PlusAuth, you need to create a client to get the necessary configuration keys in the dashboard.
+Go to [Clients](https://dashboard.plusauth.com/~clients) and create a client with the type of `Single Page Application`
+
+
+## Configure Client
+### Get Client Properties
+
+You will need your `Client Id` for interacting with PlusAuth. You can retrieve it from the created client's details.
+
+### Configure Redirect and Logout URIs
+
+When PlusAuth authenticates a user, it needs a URI to redirect back with access and id token. That URI must be in your client's `Redirect URI`
+list. If your application uses a redirect URI which is not white-listed in your PlusAuth Client, you will receive an error.
+
+The same thing applies to the logout URIs. After the user logs out, you need a URI to be redirected.
+
+{% alert %}
+
+If you are following the sample project, the Redirect URL you need to add to the Redirect URIs fields are *`http://localhost:3000/callback`* and *`http://localhost:3000/silent-renew.html`*.
+The Logout URL you need to add to the Post Logout Redirect URIs field is *`http://localhost:3000/`*.
+{% /alert %}
+
+
+## Create a React Application
+
+Create new React project using `npx` and `create-react-app`. Add a router to the project to render different views.
+
+```bash
+# Create the application using the create-react-app.
+npx create-react-app plusauth-react-starter
+
+# Move into the project directory
+cd plusauth-react-starter
+
+# Add the router, as we will be using it later
+npm install react-router-dom@6
+
+# Add bootstrap for styling
+npm install bootstrap
+```
+
+### Install OIDC Client
+For interacting with PlusAuth it is advised to use an OpenID Connect library.
+In this tutorial we will be using [oidc-client-js](https://github.com/PlusAuth/oidc-client-js)
+but you could use any OpenID Connect library.
+
+Install `oidc-client-js` with the following command
+```bash
+npm install @plusauth/oidc-client-js
+```
+
+{% alert %}
+
+`oidc-client-js` is an OpenID Connect (OIDC) and OAuth2 library for browser based JavaScript applications.
+You can find source code on [Github](https://github.com/PlusAuth/oidc-client-js) and the API documentation [here](https://docs.plusauth.com/tools/oidc-client-js).
+{% /alert %}
+
+## Configure React Application to use PlusAuth
+
+We will be using `dotenv` files for maintaining providing some constant values.
+
+### Create the .env file
+
+Create the `.env` file at the root of your project with the following and modify values accordingly.
+```properties
+# .env
+REACT_APP_OIDC_ISSUER=https://<YOUR_PLUSAUTH_TENANT_NAME>.plusauth.com/
+REACT_APP_CLIENT_ID=<YOUR_PLUSAUTH_CLIENT_ID>
+```
+
+{% alert %}
+
+If you are following the sample project, rename `.env.example` to `.env` and replace the values accordingly.
+{% /alert %}
+
+### Configure React Application
+Let's start by editing our application's entry point file.
+Edit `index.js` in `src` folder. Import `auth` file that we will create later.
+
+```js
+// index.js
+
+import React from 'react'
+import ReactDOM from 'react-dom'
+import './index.css'
+import App from './App'
+import Auth from './auth'
+import 'bootstrap/dist/css/bootstrap.min.css'
+
+// Make auth object global to access from anywhere
+window.$auth = Auth
+
+Auth.initialize()
+  .then(() => {})
+  .catch(console.error)
+  .finally(() => {
+    ReactDOM.render(
+      <React.StrictMode>
+        <App />
+      </React.StrictMode>,
+      document.getElementById('root')
+    )
+  })
+```
+
+### Configure OIDC Client
+We need to initialize our OIDC Client library to handle authentication-related operations.
+Create `auth.js` in `src` folder. Configure `oidc-client-js` as following:
+
+```js
+// auth.js
+
+import { OIDCClient } from '@plusauth/oidc-client-js'
+
+const Auth = new OIDCClient({
+  issuer: process.env.REACT_APP_OIDC_ISSUER,
+  client_id: process.env.REACT_APP_CLIENT_ID,
+  redirect_uri: 'http://localhost:3000/callback',
+  response_mode: 'form_post',
+  response_type: 'id_token token',
+  post_logout_redirect_uri: 'http://localhost:3000/',
+  autoSilentRenew: true,
+  checkSession: true,
+  requestUserInfo: true,
+  scope: 'openid profile',
+  silent_redirect_uri: 'http://localhost:3000/silent-renew.html'
+})
+
+export { Auth }
+```
+
+You may have noticed that the values defined in the [Configure Client](#configure-client) section are used here. If you have used different
+values make sure to update this file accordingly.
+
+### Configure Router
+Now let's define our application's router. We are going to define the routes of our views.
+
+Create `route.js` in `src/router` folder as following:
+
+```jsx
+// route.js
+
+import React from 'react'
+import { Route, Routes } from 'react-router-dom'
+import PrivateRoute from './privateRoute'
+import SilentRenew from '../components/silentRenew'
+import AuthCallback from '../components/authCallback'
+import Home from '../views/home'
+import Profile from '../views/profile'
+import Unauthorized from '../views/unauthorized'
+
+export const RouteList = (
+  <Routes>
+    <Route path="/" element={<Home />} />
+    <Route path="/callback" element={<AuthCallback />} />
+    <Route path="/silent-renew.html" element={<SilentRenew />} />
+    <Route path="/unauthorized" element={<Unauthorized />} />
+    <Route
+      path="/profile"
+      element={
+        <PrivateRoute>
+          <Profile />{' '}
+        </PrivateRoute>
+      }
+    />
+  </Routes>
+)
+```
+
+`PrivateRoute` component will ensure the child components are accessible only by authenticated users.
+Now create `privateRoute.js` in `src/router` as following:
+
+```jsx
+// privateRoute.js
+
+import React from 'react'
+import { Navigate } from 'react-router-dom'
+
+export default class PrivateRoute extends React.Component {
+  state = {
+    isLoggedIn: false,
+    isLoading: true,
+  }
+
+  // auth.isLoggedIn returns promise
+  // Get isLoggedIn value using await and use in render
+  async componentDidMount() {
+    const isLoggedIn = await window.$auth.isLoggedIn(true)
+    this.setState({ isLoggedIn: isLoggedIn, isLoading: false })
+  }
+
+  render() {
+    if (this.state.isLoading) return <div>Loading...</div>
+    else if (this.state.isLoggedIn) return this.props.children
+    // If logged in then go to protected route
+    else return <Navigate to="/unauthorized" /> // else navigate to unauthorized page
+  }
+}
+```
+
+## Implement login, user profile, and logout
+
+Until now, we have defined our authentication helper and routes. It is time to create the pages and interact with auth helper.
+
+### Edit Main Layout Component
+Let's create a simple layout for our application. Add `Header` component and `BrowserRouter` to `App.js`
+
+```jsx
+// App.js
+
+import Header from './components/header'
+import 'bootstrap/dist/css/bootstrap.min.css'
+import { BrowserRouter } from 'react-router-dom'
+import { RouteList } from './router/route'
+
+function App() {
+  return (
+    <div className="App">
+      <BrowserRouter basename={'/'}>
+        <Header />
+        {RouteList}
+      </BrowserRouter>
+    </div>
+  )
+}
+
+export default App
+```
+
+### Create Header Component
+
+Create `header.jsx` under `src/components` folder. It will be a basic header.
+If a user is authenticated, it will show the user's identifier and a `Logout` button.
+If not, a `Login` button will be there to initiate login.
+
+```jsx
+// header.jsx
+
+import React, { Component } from 'react'
+import { Link } from 'react-router-dom'
+
+export default class Header extends Component {
+  constructor(props) {
+    super(props)
+    this.state = { user: null }
+  }
+
+  async componentDidMount() {
+    window.$auth.on('user_login', ({ user }) => this.setState({ user: user }))
+    window.$auth.on('user_logout', () => this.setState({ user: null }))
+    const user = await window.$auth.getUser()
+    this.setState({ user: user })
+  }
+
+  userDisplayName() {
+    if (!this.state.user) {
+      return null
+    } else {
+      if (!this.state.user.given_name || !this.state.user.family_name) {
+        return this.state.user.username || this.state.user.email
+      }
+      return `${this.state.user.given_name} ${this.state.user.family_name}`
+    }
+  }
+
+  render() {
+    return (
+      <header>
+        <nav className="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+          <a className="navbar-brand container-fluid" href="/">
+            Plusauth Starter
+          </a>
+          <div className="collapse navbar-collapse" id="navbarsExampleDefault">
+            <ul className="navbar-nav"></ul>
+            {this.state.user && (
+              <li className="nav-item navbar-nav text-light">
+                <Link className="nav-link" to="/profile">
+                  Logged in as: {this.userDisplayName()}
+                </Link>
+                <button
+                  className="btn btn-link"
+                  onClick={() => window.$auth.logout()}
+                >
+                  Logout
+                </button>
+              </li>
+            )}
+            {!this.state.user && (
+              <li className="nav-item navbar-nav">
+                <button
+                  className="btn btn-link"
+                  onClick={() => window.$auth.login()}
+                >
+                  Login
+                </button>
+              </li>
+            )}
+          </div>
+        </nav>
+      </header>
+    )
+  }
+}
+```
+
+### Create AuthCallback
+To handle authorization results after a successful login, we need
+a simple page and let the library handle the authentication result.
+Create `authCallback.jsx` under `src/components` folder.
+
+```jsx
+// authCallback.jsx
+
+import React from 'react'
+import { useNavigate } from 'react-router-dom'
+
+class AuthCallback extends React.Component {
+  async componentDidMount() {
+    try {
+      await window.$auth.loginCallback()
+      this.props.navigate('/')
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  render() {
+    return <div></div>
+  }
+}
+
+// useNavigate cannot be used in Class Components
+// function component created and exported to use useNavigate()
+function WithNavigate(props) {
+  let navigate = useNavigate()
+  return <AuthCallback {...props} navigate={navigate} />
+}
+
+export default WithNavigate
+```
+
+### Create SilentRenew
+Access tokens retrieved from PlusAuth have a life span.
+`oidc-client-js` automatically provides `access_token` renewal without too much hassle.
+Before your access token expires, it will receive a new one in the background so that
+your users will have a flawless app experience without signing in again.
+
+Create `silentRenew.jsx` under `src/components` folder as following:
+
+```jsx
+// silentRenew.jsx
+
+import React from 'react'
+import { OIDCClient } from '@plusauth/oidc-client-js'
+
+export default class SilentRenew extends React.Component {
+  async componentDidMount() {
+    await new OIDCClient({
+      issuer: process.env.REACT_APP_OIDC_ISSUER,
+    }).loginCallback()
+  }
+  render() {
+    return <div></div>
+  }
+}
+```
+
+### Create Views
+### HomePage
+
+Create `home.jsx` under `src/views`.
+
+```jsx
+// home.jsx
+
+import React, { Component } from 'react'
+import { Link } from 'react-router-dom'
+
+export default class Home extends Component {
+  constructor(props) {
+    super(props)
+    this.state = { user: null }
+  }
+
+  async componentDidMount() {
+    window.$auth.on('user_login', ({ user }) => this.setState({ user: user }))
+    window.$auth.on('user_logout', () => this.setState({ user: null }))
+    const user = await window.$auth.getUser()
+    this.setState({ user: user })
+  }
+
+  render() {
+    return (
+      <div className="jumbotron">
+        <div className="container">
+          <h1 className="display-3">
+            Hello, {this.state.user ? this.state.user.username : 'World'}!
+          </h1>
+          <p>
+            This is a template for a simple login/register system. It includes
+            the OpenID Connect Implicit Flow. To view Profile page please login.
+          </p>
+          <p>
+            {this.state.user && (
+              <Link className="btn btn-primary btn-lg" to="/profile">
+                View Profile &raquo;
+              </Link>
+            )}
+
+            {!this.state.user && (
+              <button
+                className="btn btn-primary btn-lg"
+                onClick={() => window.$auth.login()}
+              >
+                Login/Register &raquo;
+              </button>
+            )}
+          </p>
+        </div>
+      </div>
+    )
+  }
+}
+```
+
+### Profile Page
+
+Create `profile.jsx` under `src/views`.
+
+```jsx
+// profile.jsx
+
+import React, { Component } from 'react'
+
+export default class Profile extends Component {
+  constructor(props) {
+    super(props)
+    this.state = { user: null }
+  }
+
+  async componentDidMount() {
+    window.$auth.on('user_login', ({ user }) =>
+      this.setState({user: user})
+    )
+    window.$auth.on('user_logout', () => (this.setState({user: null})))
+    const user = await window.$auth.getUser()
+    this.setState({user: user})
+  }
+
+  render() {
+    return (
+      <div className="container" >
+        {this.state.user && (
+          <><h3>Welcome {this.state.user.username} !</h3><pre>User object: {JSON.stringify(this.state.user, null, 2)} </pre></>
+        )}
+      </div>
+    )
+  }
+}
+```
+
+### Add Unauthorized Page
+We will display a page whenever a user tries to access a protected route without signing in.
+
+Create `unauthorized.jsx` under `src/views`.
+
+```jsx
+// unauthorized.jsx
+
+export default function Unauthorized() {
+  return (
+    <div className="container">
+      <p>You must log in to view the page</p>
+      <button className="btn btn-primary" onClick={() => window.$auth.login()}>Log in</button>
+    </div>
+  )
+}
+```
+
+## See it in action
+
+That's it. Start your app and point your browser to [http://localhost:3000](http://localhost:3000). Follow the **Log In** link to log in or sign up to your PlusAuth tenant. Upon successful login or signup, you should be redirected back to the application.
