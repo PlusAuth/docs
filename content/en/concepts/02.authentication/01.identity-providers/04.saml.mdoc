@@ -1,0 +1,89 @@
+---
+title: "SAML Connections"
+meta_title: "PlusAuth SAML Connections"
+meta_description: "PlusAuth is a product provides authorization and authentication solution in a secure way."
+keywords:
+- concepts
+- plusauth
+- federated
+- external
+- SAML
+- sso
+
+---
+
+SAML (Security Assertion Markup Language) connections enable PlusAuth to integrate with external Identity Providers (IdPs) that support the SAML 2.0 protocol. This allows users managed by your organization's existing identity system (like Active Directory Federation Services (ADFS), Okta, Azure AD, or others) to securely authenticate to applications protected by PlusAuth without needing to create separate accounts.
+
+By configuring a SAML connection in PlusAuth, you establish a trust relationship between PlusAuth (acting as a Service Provider - SP) and your chosen SAML IdP. When a user attempts to log in to an application secured by PlusAuth, they can be redirected to your organization's familiar login portal hosted by the SAML IdP. Upon successful authentication at the IdP, a digitally signed SAML assertion containing the user's identity information is sent back to PlusAuth. PlusAuth then validates this assertion and establishes a session for the user, granting them access to the application.
+
+Configuring a SAML connection in PlusAuth typically involves providing metadata or specific configuration details about your SAML IdP, such as its entity ID, sign-in and sign-out URLs, and public signing certificate. You may also need to configure PlusAuth as a trusted Service Provider within your IdP.
+
+{% mermaid  %}
+``` {% process=false %}
+sequenceDiagram
+    participant User
+    participant SP
+    participant IdP
+
+    User->>SP: Access Resource
+    SP->>SP: Create SAML Request
+    SP-->>User: Redirect to IdP with SAML Request
+    User->>IdP: Send SAML Request
+    IdP->>IdP: Authenticate User
+    IdP-->>User: Send SAML Response (Assertion)
+    User->>SP: Send SAML Response (Assertion)
+    SP->>SP: Validate Assertion
+    SP->>SP: Authenticate User
+    SP-->>User: Grant Access
+```
+{% /mermaid %}
+
+## Connection Configuration
+Following properties are used for configuring a SAML connection:
+
+| **Name**                 | **Description**                                                                                     | **Example**                                                  |
+|--------------------------|-----------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
+| `metadata_url`           | Your SAML IDP's metadata URL.                                                                       | `https://idp.example.com/metadata`                           |
+| `entity_id`              | Your SAML IDP's entity_id.                                                                          | `https://idp.example.com/entity`                             |
+| `sign_in_url`            | Your SAML IDP's login URL.                                                                          | `https://idp.example.com/login`                              |
+| `sign_out_enabled`       | If enabled, when a user logs out from PlusAuth, a SAML logout request will be sent to the SAML IdP. | `true`                                                       |
+| `sign_out_url`           | Your SAML IdP's sign out URL.                                                                       | `https://idp.example.com/logout`                             |
+| `signing_certificate`    | The public certificate of your SAML Identity Provider.                                              | `MIICajCCAdOgAwIBAgIBADANBgkqhkiG9w0BAQsFAD...` (PEM format) |
+| `sign_request`           | Enable or disable the signing of SAML authentication requests.                                      | `true`                                                       |
+| `sign_request_algorithm` | The algorithm to use for signing SAML authentication requests.                                      | `sha256`                                                     |
+| `request_binding`        | HTTP binding to use when sending SAML authentication requests.                                      | `HTTP-POST`                                                  |
+| `sign_out_binding`       | HTTP binding to use when sending SAML logout requests.                                              | `HTTP-Redirect`                                              |
+| `mappings`               | Defines how SAML attributes map to PlusAuth user properties.                                        | See [User Object Mapping](#user-object-mapping)              |
+
+## User Object Mapping
+
+SAML Identity Providers (IdPs) possess the capability to transmit a variety of user attributes within the SAML assertion. To ensure consistent utilization of this information within PlusAuth, it is necessary to establish a mapping between the attributes contained in the SAML assertion and the corresponding user properties in PlusAuth.
+
+While the mapping of all attributes is not invariably required, certain attributes are essential for proper user identification and system functionality. The following attributes are typically required:
+
+| **Configuration** | **Description**                                                                                                                                                                                                                 |
+|-------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **`id`**          | A unique identifier for the user. This is crucial for PlusAuth to correctly identify and manage user accounts across logins. Common SAML attributes used for this are `NameID` or a unique user identifier provided by the IdP. |
+| **`email`**       | The user's email address. This is often required for password reset functionality and other communication purposes. The corresponding SAML attribute is commonly `emailaddress` or `mail`.                                      |
+
+The mapping of other attributes is optional; however, it can be advantageous. For instance, if an application utilizes a user's first name, last name, or phone number, the corresponding SAML attributes (e.g., `givenname`, `surname`, `mobilephone`) should be mapped.
+This practice ensures that user profiles within PlusAuth are automatically populated with data provided by the SAML IdP, thereby enhancing the user experience and mitigating the need for manual data entry.
+
+Default SAML mapping is as following:
+```json
+{
+  "id": "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier",
+  "email": [
+    "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress",
+    "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn"
+  ],
+  "name": "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name",
+  "phone_number": "https://schemas.xmlsoap.org/ws/2005/05/identity/claims/mobilephone",
+  "profile.name": "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname",
+  "profile.family_name": "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname",
+  "profile.gender": "https://schemas.xmlsoap.org/ws/2005/05/identity/claims/gender",
+  "profile.birthdate": "https://schemas.xmlsoap.org/ws/2005/05/identity/claims/dateofbirth",
+  "profile.website": "https://schemas.xmlsoap.org/ws/2005/05/identity/claims/webpage"
+}
+
+```

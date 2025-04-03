@@ -24,7 +24,7 @@ This tutorial follows [plusauth-spring-backend-starter](https://github.com/PlusA
 ## Create PlusAuth Client
 
 After you sign up or log in to PlusAuth, you need to create a client to get the necessary configuration keys in the dashboard.
-Go to [Clients](https://dashboard.plusauth.com/~clients) and create a client with the type of `Server to Server Application`
+Go to [Clients](https://dashboard.plusauth.com#clients) and create a client with the type of `Server to Server Application`
 
 ## Configure Client
 
@@ -34,21 +34,21 @@ You will need your `Client Id` and `Client Secret` for interacting with PlusAuth
 
 ## Configure APIs
 
-### Create API
+### Create Resource
 
-API is a definition in PlusAuth equals to your services which you want to secure. You need to create an API to add authorization to your app.
-Go to [Api's](https://dashboard.plusauth.com/~apis) and create a new API. Provide a name and audience to your api. `Audience` must be a URL that identifies your api, like `https://example.com/api`.
+Resource is a definition in PlusAuth equals to your services which you want to secure. You need to create an API to add authorization to your app.
+Go to [Resources](https://dashboard.plusauth.com#resources) and create a new API. Provide a name and audience to your api. `Audience` must be a URL that identifies your api, like `https://example.com/api`.
 
-### Create API Permissions
-After you create the API, you can create permissions for it. Permissions allow you to define how resources can be accessed with a specific access token.
-Go to [Dashboard > Api's ](https://dashboard.plusauth.com/~apis) and click on the `Permissions` button on the row at the data table which contains your API.
+### Create Resource Permissions
+After you create the Resource, you can create permissions for it. Permissions allow you to define how resources can be accessed with a specific access token.
+Go to [Dashboard > Resources](https://dashboard.plusauth.com#resources) and click on the `Permissions` button on the row at the data table which contains your API.
 
 {% alert %}
 This tutorial uses `users:read`, `users:write`, `users:update` and `users:delete` permissions to secure resources
 {% /alert %}
 
 ### Authorize Client
-Finally, authorize your client in your api to grant permissions. Go to [Dashboard > Api's ](https://dashboard.plusauth.com/~apis), then select your api and navigate to `Authorized Clients`.
+Finally, authorize your client in your resource to grant permissions. Go to [Dashboard > Resources ](https://dashboard.plusauth.com#resources), then select your resource and navigate to `Authorized Clients`.
 Add your client to the `Authorized Clients` list and grant permissions to it.
 
 ## Configure Spring Boot to add Authorization
@@ -173,7 +173,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 }
 ```
 
-You may have noticed that the `Audience` value defined in the [Create API](#create-api) section is used here.
+You may have noticed that the `Audience` value defined in the [Create Resource](#create-resource) section is used here.
 
 Also, `jwtDecoder` provides token decoder and validation functionality to security middleware. It also provides `scope` validation if the endpoint requires permission.
 
@@ -202,7 +202,7 @@ class AudienceValidator implements OAuth2TokenValidator<Jwt> {
 
 ### Create Protected Controller
 
-Add a Controller to your application to serve API endpoints. All routes are protected by `SecurityConfig`, which is defined in [Configure Authorization Middleware](#configure-authorization-middleware)
+Add a Controller to your application to serve resource endpoints. All routes are protected by `SecurityConfig`, which is defined in [Configure Authorization Middleware](#configure-authorization-middleware)
 section, so you don't need to add any annotation to secure endpoints.
 
 
@@ -239,13 +239,13 @@ public class UserController {
 
 ## See it in action
 
-Start your app and follow the [Using API](#using-api) section to see it in action.
+Start your app and follow the [Using Resource](#using-resource) section to see it in action.
 
-## Using API
+## Using Resource
 
-You need to obtain an `access token` to call your API. This tutorial shows how `OAuth Client Credentials Flow` works for server-to-server communication where there is no user and login process.
+You need to obtain an `access token` to call your resource. This tutorial shows how `OAuth Client Credentials Flow` works for server-to-server communication where there is no user and login process.
 You will need your client's `Client Id` and `Client Secret` properties to acquire an access token in `Client Credentials Flow`.
-Also, you must include `Audience` and `Scope` parameters to access your API.
+Also, you must include `Audience` and `Scope` parameters to access your resource.
 
 {% alert %}
 
@@ -260,7 +260,7 @@ You can obtain an access token using the command line or another application. Cr
 # bash
 
 curl --request POST \
-  --url 'https://<YOUR_TANENT_ID>.plusauth.com/oauth2/token' \
+  --url 'https://<YOUR_TENANT_ID>.plusauth.com/oauth2/token' \
   --header 'content-type: application/x-www-form-urlencoded' \
   --data 'grant_type=client_credentials' \
   --data 'client_id=<YOUR_CLIENT_ID>' \
@@ -270,7 +270,7 @@ curl --request POST \
 
 ```
 
-You may have noticed that the values defined in [Configure Client](#configure-client) and [Configure APIs](#configure-apis) sections are used here. If you have used different
+You may have noticed that the values defined in [Configure Client](#configure-client) and [Configure Resources](#configure-resources) sections are used here. If you have used different
 values make sure to update this file accordingly.
 
 {% alert %}

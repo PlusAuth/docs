@@ -23,7 +23,7 @@ This tutorial follows [plusauth-nodejs-backend-starter](https://github.com/PlusA
 ## Create PlusAuth Client
 
 After you sign up or log in to PlusAuth, you need to create a client to get the necessary configuration keys in the dashboard.
-Go to [Clients](https://dashboard.plusauth.com/~clients) and create a client with the type of `Server to Server Application`
+Go to [Clients](https://dashboard.plusauth.com#clients) and create a client with the type of `Server to Server Application`
 
 ## Configure Client
 
@@ -31,23 +31,23 @@ Go to [Clients](https://dashboard.plusauth.com/~clients) and create a client wit
 
 You will need your `Client Id` and `Client Secret` for interacting with PlusAuth. You can retrieve them from the created client's details.
 
-## Configure APIs
+## Configure Resources
 
-### Create API
+### Create Resource
 
-API is a definition in PlusAuth equals to your services which you want to secure. You need to create an API to add authorization to your app.
-Go to [Api's](https://dashboard.plusauth.com/~apis) and create a new API. Provide a name and audience to your api. `Audience` must be a URL that identifies your api, like `https://example.com/api`.
+Resource is a definition in PlusAuth equals to your services which you want to secure. You need to create a resource to add authorization to your app.
+Go to [Resources](https://dashboard.plusauth.com#resources) and create a new resource. Provide a name and audience to your resource. `Audience` must be a URL that identifies your resource, like `https://example.com/api`.
 
-### Create API Permissions
-After you create API, you can create permissions for it. Permissions allow you to define how resources can be accessed with a specific access token.
-Go to [Dashboard > Api's ](https://dashboard.plusauth.com/~apis) and click on the `Permissions` button on the row at the data table which contains your API.
+### Create Resource Permissions
+After you create Resource, you can create permissions for it. Permissions allow you to define how resources can be accessed with a specific access token.
+Go to [Dashboard > Resources ](https://dashboard.plusauth.com#resources) and click on the `Permissions` button on the row at the data table which contains your resource.
 
 {% alert %}
 This tutorial uses `users:read`, `users:write`, `users:update` and `users:delete` permissions to secure resources
 {% /alert %}
 
 ### Authorize Client
-Finally, authorize your client in your api to grant permissions. Go to [Dashboard > Api's ](https://dashboard.plusauth.com/~apis), then select your api and navigate to `Authorized Clients`.
+Finally, authorize your client in your resource to grant permissions. Go to [Dashboard > Resources](https://dashboard.plusauth.com#resources), then select your resource and navigate to `Authorized Clients`.
 Add your client to the `Authorized Clients` list and grant permissions to it.
 
 ## Configure Node.js to add Authorization
@@ -173,7 +173,7 @@ module.exports = (scope = null) => {
 In case token validation succeeds, the middleware checks for the requested scope as the second step. If the requested scope is not provided in the token, the response status will be `403 Forbidden`.
 
 {% alert %}
-You may have noticed that the `Audience` value defined in the [Create API](#create-api) section is used here.
+You may have noticed that the `Audience` value defined in the [Create Resource](#create-resource) section is used here.
 {% /alert %}
 
 
@@ -184,30 +184,30 @@ Finally, we will create API endpoints. We will be using `checkJwt` middleware he
 ```js
 // server.js
 
-  // get users API endpoint (token requires users:read scope)
-  app.get('/users', checkJwt('users:read'), function (req, res) {
-    //send the response
-    res.status(200).send('All Users List');
-  });
+// get users API endpoint (token requires users:read scope)
+app.get('/users', checkJwt('users:read'), function (req, res) {
+  //send the response
+  res.status(200).send('All Users List');
+});
 
-  // create user API endpoint (token requires users:write scope)
-  app.post('/users', checkJwt('users:write'), function (req, res) {
-    //send the response
-    res.status(200).send('New User Created');
-  });
+// create user API endpoint (token requires users:write scope)
+app.post('/users', checkJwt('users:write'), function (req, res) {
+  //send the response
+  res.status(200).send('New User Created');
+});
 
-  // update user API endpoint (token requires users:update scope)
-  app.put('/users', checkJwt('users:update'), function (req, res) {
-    //send the response
-    res.status(200).send('User Updated');
-  });
+// update user API endpoint (token requires users:update scope)
+app.put('/users', checkJwt('users:update'), function (req, res) {
+  //send the response
+  res.status(200).send('User Updated');
+});
 
-  // update user API endpoint (token requires users:delete scope)
-  app.delete('/users', checkJwt('users:delete'), function (req, res) {
-      //send the response
-      res.status(200).send('User Deleted');
-    }
-  );
+// update user API endpoint (token requires users:delete scope)
+app.delete('/users', checkJwt('users:delete'), function (req, res) {
+    //send the response
+    res.status(200).send('User Deleted');
+  }
+);
 ```
 
 ## See it in action
@@ -232,7 +232,7 @@ You can obtain an access token using the command line or another application. Cr
 # bash
 
 curl --request POST \
-  --url 'https://<YOUR_TANENT_ID>.plusauth.com/oauth2/token' \
+  --url 'https://<YOUR_TENANT_ID>.plusauth.com/oauth2/token' \
   --header 'content-type: application/x-www-form-urlencoded' \
   --data 'grant_type=client_credentials' \
   --data 'client_id=<YOUR_CLIENT_ID>' \
@@ -242,7 +242,7 @@ curl --request POST \
 
 ```
 
-You may have noticed that the values defined in [Configure Client](#configure-client) and [Configure APIs](#configure-apis) sections are used here. If you have used different
+You may have noticed that the values defined in [Configure Client](#configure-client) and [Configure Resources](#configure-resources) sections are used here. If you have used different
 values make sure to update this file accordingly.
 
 {% alert %}

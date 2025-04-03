@@ -10,7 +10,6 @@ keywords:
 - ldap
 - ad
 - active directory
-
 ---
 
 You can integrate your applications with your AD/LDAP server with a few keystrokes.
@@ -18,7 +17,7 @@ All you need is your AD/LDAP server's connection properties.
 
 The flow is simple, when an AD/LDAP user authenticates successfully, the same user will be created in PlusAuth to
 make sure your LDAP users and your application benefits from all of PlusAuth functionality and features. However,
-every time they try to log in, the password verification will be handled by your 
+every time they try to log in, the password verification will be handled by your
 AD/LDAP server.
 
 To create an AD/LDAP connection, go to [Dashboard > Connections > Enterprise Connections > AD/LDAP](https://dashboard.plusauth.com/#connections/enterprise/ldap/new).
@@ -42,7 +41,7 @@ Like any external connection, PlusAuth must know your AD/LDAP server's connectio
 
 
 ## User Object Mapping
-Companies have different structures and user profiles in their AD/LDAP servers. To ensure consistency with your application and different connection types, PlusAuth requires 
+Companies have different structures and user profiles in their AD/LDAP servers. To ensure consistency with your application and different connection types, PlusAuth requires
 you to map PlusAuth user's properties with your AD/LDAP user's attributes.
 
 You don't need to map all the fields but some are required. Required ones are:
@@ -56,5 +55,5 @@ You don't need to map all the fields but some are required. Required ones are:
 
 Other fields are optional but in some cases they may be crucial to set, otherwise some flows will not work as expected or
 some AD/LDAP users would lack some functionality. For example, if you are using SMS Multi-Factor Authentication in your
-application, as you guess, a phone number is required. If your AD/LDAP users already have a phone number you 
+application, as you guess, a phone number is required. If your AD/LDAP users already have a phone number you
 should map its attribute too.
