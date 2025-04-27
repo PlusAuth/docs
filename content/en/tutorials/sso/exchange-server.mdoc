@@ -1,56 +1,120 @@
 ---
 title: "Microsoft Exchange Server"
 keywords:
-    - concepts
-    - plusauth
-    - exchange-server
-    - active-directory
-    - ws-federation
+  - concepts
+  - plusauth
+  - exchange-server
+  - active-directory
+  - ws-federation
 ---
 
-- Go to Dashboard > Clients and Create a new Client by clicking "Create" button
-- Create a Regular Web App client with any name ![exchange-img_1.png](./img/exchange/exchange-img_1.png)
-- Go to created client details and "Connectors" tab
-- Select WS-Fed
-- Enter the following information in the respective fields.
-  - **Realm**: `https://{owa-url}` e.g. https://mail.example.com/owa/
-  - **Application Callback URL**: `https://{owa-url}` e.g. https://mail.example.com/owa/ ![exchange-img_3.png](./img/exchange/exchange-img_3.png)
+## Overview
 
-- Click to **Download Certificate** button and save it to your exchange server.
-- Save **Certificate Thumbprint** to somewhere as we will use it in later steps.
-- Add above certificate (obtained in above step) to the Trusted People store on the Exchange Server using the steps below:
-  - Got to `Management Console`. Open run dialog (Win + R) and type `mmc` and press enter.
-  - In Management Console, go to `File > Add or Remove Snap-ins (Ctrl + M)`.
-  - Search for `Certificates` on the left side and press Add.
-  - In the Certificate Snap In window, select `Computer account` and press Next. Then select `Local Computer` and press Finish.
-  - You will see an entry for `Certificates (Local Computer)` in the right pane. Click OK to close the Add or Remove Snap-ins window.
-  - You will see a branch named `Certificates` created under `Console Root`. Expand the `Certificates` branch and select `Trusted People`.
-  - Right click on `Trusted People > Find > Import` and click on Next.
-  - Choose the location of the downloaded certificate file you created above and click on Next, again Next and Finish.
-  - You have successfully added a Signing Certificate to Trusted People. Now close Management Console and choose No on the Save data prompt.
+This guide walks you through integrating Microsoft Exchange Server with PlusAuth using **WS-Federation** for authentication. You will configure a PlusAuth client, install necessary certificates, update Exchange Server settings, and set up an AD/LDAP connection.
 
-- Execute the commands below on the Exchange Server using the `Exchange Management Shell`.
-  - In the below command, `##Base URL##` is the exchange/OWA host. The command has both URLs: One ending in / and the other one which does not contain a trailing slash.
-    ```shell
-    $uris=@("https://##Base URL##/owa/","https://##Base URL##/ecp/","https://##Base URL##/owa","https://##Base URL##/ecp")
-    ```
-  - In the below command, the `##PlusAuth Issuer##` is the WS-Federation Reply URL. The `##Cert Thumbprint##` is the **SHA-1 Thumbprint** of the certificate you downloaded. You can copy these values from PlusAuth Dashboard where we have configured WS-Fed in above steps.
-    ```shell
-    Set-OrganizationConfig -AdfsIssuer "##PlusAuth Issuer##" -AdfsAudienceUris $uris -AdfsSignCertificateThumbprint "##Cert Thumbprint##"
-    ```
-  - Now we are disabling other authentication mechanisms to let PlusAuth handle it.
-    ```shell
-    Get-EcpVirtualDirectory | Set-EcpVirtualDirectory -AdfsAuthentication $true -BasicAuthentication $false -DigestAuthentication $false -FormsAuthentication $false -WindowsAuthentication $false
-    ```
-    ```shell
-    Get-OwaVirtualDirectory | Set-OwaVirtualDirectory -AdfsAuthentication $true -BasicAuthentication $false -DigestAuthentication $false -FormsAuthentication $false -WindowsAuthentication $false -OAuthAuthentication $false
-    ```
-  - Finally, restart services to apply these changes.
-    ```shell
-    # Restart w3svc and was
-    net stop was /y
-    net start w3svc
-    ```
+{% alert type="warning" %}
+  Exchange Server integration with PlusAuth requires **Active Directory Federation Services** to be installed in your Exchange Server.
+  You can check whether if it is installed or not with following command in a PowerShell session:
+
+  ```powershell
+  Get-WindowsFeature ADFS-Federation
+  ```
+
+  If it is installed you will see something like this:
+  ```powershell
+  Display Name                                    Name                   Install State
+  ------------                                    ----                   -------------
+  [X] Active Directory Federation Services        ADFS-Federation            Installed
+  ```
+{% /alert %}
+
+## 1. Create a PlusAuth Client
+
+- Navigate to **Dashboard > Clients** in your PlusAuth console.
+- Click the **Create** button to create a new client.
+- Select **Regular Web App** as the client type and give it an identifiable name.
+
+  ![exchange-img_1.png](./img/exchange/exchange-img_1.png)
+
+- After creating the client, go to its **Details** page and open the **Connectors** tab.
+- Select **WS-Fed** as the connector type.
+
+Now, configure WS-Federation settings:
+
+- **Realm**: `https://{owa-url}`
+  Example: `https://mail.example.com/owa/`
+- **Application Callback URL**: `https://{owa-url}`
+  Example: `https://mail.example.com/owa/`
+
+  ![exchange-img_3.png](./img/exchange/exchange-img_3.png)
+
+---
+
+## 2. Download and Install Certificate on Exchange Server
+
+- After saving WS-Federation settings, click on the **Metadata** button right above the form.
+- Click **Download Certificate** and save it to your Exchange Server machine. You can also copy certificate contents and paste them in a file with `.crt` extension.
+- Copy and securely store the **Certificate Thumbprint** — you will need it later.
+
+Next, install the downloaded certificate into the **Trusted People** store on the Exchange Server:
+
+- Open the **Run** dialog (Win + R), type `mmc`, and press Enter.
+- In the Management Console, go to **File > Add or Remove Snap-ins (Ctrl + M)**.
+- Find and add **Certificates** from the left panel.
+- In the Certificate Snap-In window:
+  - Choose **Computer account** and click **Next**.
+  - Select **Local Computer** and click **Finish**.
+- In the console tree, expand **Certificates (Local Computer) > Trusted People**.
+- Right-click **Trusted People > All Tasks > Import**.
+- Follow the Import Wizard:
+  - Choose the downloaded certificate.
+  - Click **Next** through the steps and **Finish**.
+- Close the Management Console without saving the snap-in layout.
+
+---
+
+## 3. Configure Exchange Server WS-Federation Settings
+
+Now, configure Exchange Server to trust PlusAuth by executing the following commands in the **Exchange Management Shell**:
+
+- First, define the accepted URLs for OWA and ECP endpoints:
+  ```powershell
+  $uris=@(
+    "https://##Base URL##/owa/",
+    "https://##Base URL##/ecp/",
+    "https://##Base URL##/owa",
+    "https://##Base URL##/ecp"
+  )
+  ```
+  Replace `##Base URL##` with your actual OWA hostname.
+
+- Next, configure WS-Federation settings:
+
+  ```powershell
+  Set-OrganizationConfig -AdfsIssuer "##PlusAuth Issuer##" -AdfsAudienceUris $uris -AdfsSignCertificateThumbprint "##Cert Thumbprint##"
+  ```
+   Replace following values from the **Metadata** dialog in the PlusAuth client settings.
+
+  `##PlusAuth Issuer##`: The WS-Federation Reply URL from PlusAuth.
+
+  `##Cert Thumbprint##`: The SHA-1 thumbprint of the certificate you downloaded earlier.
+- Disable other authentication methods to force PlusAuth authentication:
+
+  First disable for ECP (Exchange Control Panel)
+  ```powershell
+  Get-EcpVirtualDirectory | Set-EcpVirtualDirectory -AdfsAuthentication $true -BasicAuthentication $false -DigestAuthentication $false -FormsAuthentication $false -WindowsAuthentication $false
+  ```
+
+  And then disable for OWA (Outlook Web App)
+
+  ```powershell
+  Get-OwaVirtualDirectory | Set-OwaVirtualDirectory -AdfsAuthentication $true -BasicAuthentication $false -DigestAuthentication $false -FormsAuthentication $false -WindowsAuthentication $false -OAuthAuthentication $false
+  ```
+- Finally, restart IIS services to apply your changes:
+  ```powershell
+  net stop was /y
+  net start w3svc
+  ```
 
 
 ## Create AD/LDAP Connection
@@ -58,9 +122,8 @@ keywords:
 - Create a new `AD / LDAP` Enterprise connection
 - Enter name, and select the client created above.
 - Fill required fields according to your AD/LDAP connection.
-  - **Search Filter**: Enter LDAP filter to find user with parameter submitted from login page. Ex. `(mail={{username}})`
-  - ![exchange-img_5.png](./img/exchange/exchange-img_5.png)
-- After creating connection make it default by toggling `Default Connection`
+- After creating the connection, toggle "Default Connection" to make it the default for your tenant.
+
 
 {% alert %}
   You can use following command to get your AD user's all attributes. Replace `##Username##` with a valid username.
