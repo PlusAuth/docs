@@ -60,21 +60,21 @@ package compatible to your ASP.NET version. For example, for `ASP.NET 7.x`, pack
 Add following section to your `appsettings.json`. **Audience** parameter should be the same with your
 resource's audience we created in [Configure PlusAuth/Define your API](#define-your-api-resource) step
 
-{% code-group %}
+{% tabs %}
 ```json {% title="appsettings.json" frame="code" %}
 "PlusAuth": {
   "Issuer": "https://{YOUR_PLUSAUTH_TENANT_ID}.plusauth.com",
   "Audience": "urn:dotnet-core-api"
 }
 ```
-{% /code-group %}
+{% /tabs %}
 
 ### Configure JWT Authorization
 In your `Program.cs` file register **JwtBearer** authentication scheme and
 add the authentication and authorization middleware to the middleware pipeline by using
 `UseAuthentication` and `UseAuthorization` methods:
 
-{% code-group %}
+{% tabs %}
 ```csharp {% title="Program.cs" frame="code" %}
 /* ~~Redacted for simplicity~~ */
 
@@ -94,7 +94,7 @@ app.UseAuthorization();
 
 /* ~~Redacted for simplicity~~ */
 ```
-{% /code-group %}
+{% /tabs %}
 
 ### Apply Permission (Scope) Policy
 After configuring JWT Authorization we need to check the required scopes for each controller/action. We will be using
@@ -106,7 +106,7 @@ This requirement will check if `scope` claim exists, and it contains the require
 
 Creating following files:
 
-{% code-group %}
+{% tabs %}
 ```csharp {% title="ScopeAuthorizationHandler.cs" frame="code" %}
 using Microsoft.AspNetCore.Authorization;
 
@@ -152,7 +152,7 @@ public class ScopeRequirement : IAuthorizationRequirement
   }
 }
 ```
-{% /code-group %}
+{% /tabs %}
 
 
 After creating authorization requirements as provided above, all we need to do is define our policies.
@@ -163,7 +163,7 @@ the `AddPolicy` method and use our newly created `ScopeRequirement`. Finally, re
 In this tutorial we have created **read:weather** scope (permission),
 so the code block would look like this.
 
-{% code-group %}
+{% tabs %}
 ```csharp {% title="Program.cs" frame="code" %}
 /* ~~Redacted for simplicity~~ */
 
@@ -181,14 +181,14 @@ builder.Services.AddSingleton<IAuthorizationHandler, ScopeAuthorizationHandler>(
 /* ~~Redacted for simplicity~~ */
 
 ```
-{% /code-group %}
+{% /tabs %}
 
 
 ### Protect Your Endpoints
 
 To secure our endpoints, we need to use `[Authorize]` attribute with our policy name which is **read:weather** in this tutorial.
 
-{% code-group %}
+{% tabs %}
 ```csharp {% title="Controllers/WeatherForecastController.cs" frame="code" %}
 /* ~~Redacted for simplicity~~ */
 
@@ -207,6 +207,6 @@ public class WeatherForecastController : ControllerBase
 }
 
 ```
-{% /code-group %}
+{% /tabs %}
 
 Now, our endpoint expects a JWT access token provided by `Authorization` header using `Bearer` scheme and contains **read:weather** scope.
