@@ -98,7 +98,7 @@ layout:
   Make sure you check the existence of the key before you try to access them
   {% /alert %}
 
-  {% code-group %}
+  {% tabs %}
   ```json5 {% title="Common Properties" frame="code" %}
   {
     "exp": 1702250257,
@@ -162,7 +162,7 @@ layout:
     "type": "prompt"
   }
   ```
-  {% /code-group %}
+  {% /tabs %}
 
 
   #### Settings
@@ -181,7 +181,7 @@ layout:
 
   Your JWT must contain following claims depending on the push notification type:
 
-{% code-group %}
+{% tabs %}
   ```json5 {% title="Common values" frame="code" %}
   {
      // If user rejects interaction
@@ -198,7 +198,7 @@ layout:
     "response": "accepted", // or "rejected",
   }
   ```
-{% /code-group %}
+{% /tabs %}
 
 
   Here is the responding request:
