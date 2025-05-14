@@ -16,10 +16,10 @@ keywords:
   - login security
 ---
 
-It is a common thing to block users when a number of failed login attempts are made. This behaviour will also help 
+It is a common thing to block users when a number of failed login attempts are made. This behaviour will also help
 to secure your users from slow brute-force attacks.
 
-It is easy to make multiple attempts from different IPs with today's technology or tools. 
+It is easy to make multiple attempts from different IPs with today's technology or tools.
 In this case, [Brute-Force Protection](/en/concepts/security/brute-force) remains insufficient to protect your users' accounts.
 While brute-force protection prevents attempts from single source (IP), this policy will count failed attempts from all sources.
 
@@ -45,7 +45,17 @@ Attempts = 50
 Duration = 86400 (1 day in seconds)
 Block Duration = 31540000(1 year in seconds)
 ```
-if a user fails to login to their account 50 times *(Attempts)* in a day *(Duration)*, their account will be 
-blocked for 1 year *(Block Duration)*, and they will receive configured **Blocked Account** email.
 
-Blocked accounts could be unblocked anytime by administrators with Management API or dashboard.
+If a user fails to log in to their account 50 times *(Attempts)* within a single day *(Duration)*,
+their account will be blocked for 1 year *(Block Duration)*.
+They will also receive the configured **Blocked Account** email.
+
+## Unblocking Users
+Blocked accounts can be unblocked at any time by administrators via the
+**[Core API](https://docs.plusauth.com/api/core)** or the dashboard.
+To unblock a user from the dashboard,
+go to **[Dashboard > Users](https://dashboard.plusauth.com/#users)**,
+open the user's details, and click the **Unblock** button.
+
+Using the `Core API`, you can send an [Update User](https://docs.plusauth.com/api/core/-/users/update-user)
+request with the `blocked` property set to `false`.
