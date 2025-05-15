@@ -25,35 +25,149 @@ To create an AD/LDAP connection, go to [Dashboard > Connections > Enterprise Con
 AD/LDAP federated connection contains two sections for the configuration which are `Connection Configuration` and `User Object Mapping`.
 
 ## Connection Configuration
+
 Like any external connection, PlusAuth must know your AD/LDAP server's connection details and credentials to interact with it.
 
-| Configuration                 | Description                                                                                                                                                                                                                                                                                                                                                          | Example                                                                                |
-|-------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------|
-| **Name**                      | Your connection's unique identifier. Cannot update after set. It could contain `uppercase` and `lowercase latin letters`, `digits` and `-`, `_`                                                                                                                                                                                                                      | `my-ldap-connection`                                                                   |
-| **URL**                       | LDAP server's connection URI. Must contain scheme, host and port. `<ldap/s>://<host>:<port>`.                                                                                                                                                                                                                                                                        | `ldaps://myldapserver.com:636`, `ldap://myldapserver.com:389` or `ldap://10.1.1.1:389` |
-| **Bind DN**                   | The full DN of the user you bind with.                                                                                                                                                                                                                                                                                                                               | `america\momo` or `CN=PlusAuth,OU=Users,DC=domain,DC=com`                              |
-| **Bind Credentials**          | The password of the bind user.	                                                                                                                                                                                                                                                                                                                                      | `YOUR_PASSWORD`                                                                        |
-| **Search Base DN**            | Base where we can search for users.                                                                                                                                                                                                                                                                                                                                  | `ou=people,dc=plusauth,dc=example` or `DC=mydomain,DC=com`                             |
-| **Search Filter**             | Filter for finding an LDAP user. Format: [RFC 4515](https://tools.ietf.org/search/rfc4515). You can use ``{{username}}`` for to be searched user interpolation.                                                                                                                                                                                                      | `(uid={{username}})` or `(\|(uid={{username}})(mail={{username}}))`                    |
-| **STARTTLS**                  | Enable STARTTLS. If you are not using secure connection, enabling this option is encouraged.                                                                                                                                                                                                                                                                         |                                                                                        |
-| **Synchronize User Profiles** | With this setting enabled, on each successful user login, user object will be requested from your AD/LDAP server and PlusAuth user will be updated accordingly.                                                                                                                                                                                                      |                                                                                        |
-| **Write Mode**                | By default AD/LDAP connections are read-only. Being read-only ensures that whatever yo do over PlusAuth, your AD/LDAP user will not be updated/deleted. If you enable this option, the changes will be reflected also to your AD/LDAP server. Which means whenever a user is deleted/updated from PlusAuth, it will be deleted/updated from your AD/LDAP server too. |                                                                                        |
-
+| Configuration                                                                                                                                                                                                                                                                                                                                                        | Description                                                                                                                                                                                                                                                                                                                                                          | Examples {% width="30%" %}                                                                                                                                                                                                                                                                                                                                            |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Name**                                                                                                                                                                                                                                                                                                                                                             | Your connection's unique identifier. Cannot update after set. It could contain `uppercase` and `lowercase latin letters`, `digits` and `-`, `_`                                                                                                                                                                                                                      | `my-ldap-connection`                                                                                                                                                                                                                                                                                                                                                 |
+| **URL**                                                                                                                                                                                                                                                                                                                                                              | LDAP server's connection URI. Must contain scheme, host and port. `<ldap/s>://<host>:<port>`.                                                                                                                                                                                                                                                                        | `ldaps://myldapserver.com:636`, `ldap://myldapserver.com:389`, `ldap://10.1.1.1:389`                                                                                                                                                                                                                                                                               |
+| **Bind DN**                                                                                                                                                                                                                                                                                                                                                          | The full DN of the user you bind with.                                                                                                                                                                                                                                                                                                                               | `CN=PlusAuth,OU=Users,DC=domain,DC=com`                                                                                                                                                                                                                                                                                                            |
+| **Bind Credentials**                                                                                                                                                                                                                                                                                                                                                 | The password of the bind user.                                                                                                                                                                                                                                                                                                                                       | `YOUR_PASSWORD`                                                                                                                                                                                                                                                                                                                                                      |
+| **Search Base DN**                                                                                                                                                                                                                                                                                                                                                   | Base where we can search for users.                                                                                                                                                                                                                                                                                                                                  | `ou=people,dc=plusauth,dc=example`, `DC=mydomain,DC=com`                                                                                                                                                                                                                                                                                                           |
+| **Search Filter**                                                                                                                                                                                                                                                                                                                                                    | Filter for finding an LDAP user. Format: [RFC 4515](https://tools.ietf.org/search/rfc4515). You must use `{{username}}` for username interpolation.                                                                                                                                                                                                                  | `(uid={{username}})`, `(&(objectCategory=person)(anr={{username}}))`                                                                                                                                                                                                                                                                                                                                       |
+| **STARTTLS**                                                                                                                                                                                                                                                                                                                                                         | Enable STARTTLS. If you are not using secure connection, enabling this option is encouraged.                                                                                                                                                                                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                      |
+| **Synchronize User Profiles**                                                                                                                                                                                                                                                                                                                                        | With this setting enabled, on each successful user login, user object will be requested from your AD/LDAP server and PlusAuth user will be updated accordingly.                                                                                                                                                                                                      |                                                                                                                                                                                                                                                                                                                                                                      |
+| **Write Mode**                                                                                                                                                                                                                                                                                                                                                       | By default AD/LDAP connections are read-only. Being read-only ensures that whatever yo do over PlusAuth, your AD/LDAP user will not be updated/deleted. If you enable this option, the changes will be reflected also to your AD/LDAP server. Which means whenever a user is deleted/updated from PlusAuth, it will be deleted/updated from your AD/LDAP server too. |                                                                                                                                                                                                                                                                                                                                                                      |
 
 ## User Object Mapping
+
 Companies have different structures and user profiles in their AD/LDAP servers. To ensure consistency with your application and different connection types, PlusAuth requires
 you to map PlusAuth user's properties with your AD/LDAP user's attributes.
 
+
+The mapping configuration is written in **JSON format**. The configuration's **keys** correspond to fields in the **PlusAuth user object**,
+ and some LDAP specific configuration, such as:
+
+- `email`
+- `username`
+- `blocked`
+- `object_classes`
+etc.
+
+{% alert %}
+The PlusAuth Dashboard offers **autocomplete functionality** to help you while configuring your connection.
+{% /alert %}
+
+### Value Types
+
+Each key expects a value of one of the following types:
+
+- `string`
+- `boolean`
+- `string[]` (array of strings)
+- a **constant value object**
+
+These values represent the **attribute name in the AD/LDAP user object**.
+
+**Boolean**
+
+If the value is a `boolean` (`true`), the **same key** will be used to look up the corresponding attribute in the AD/LDAP user.
+
+```json
+{
+  "phone_number": true
+}
+```
+This configuration will look for the `phone_number` attribute in the AD/LDAP user object.
+
+**String**  
+
+If the value is a `string`, it specifies the exact attribute name to use in the AD/LDAP user object.
+
+```json
+{
+  "username": "uid"
+}
+```
+This maps the `uid` attribute from AD/LDAP to the `username` field in PlusAuth.
+
+**String Array**  
+
+If the value is a `string[]` (array of strings), each attribute is checked in order. The first one with a non-empty value will be used.
+```json
+{
+  "name": [
+    "name",
+    "cn"
+  ]
+}
+```
+
+This checks the `name` attribute first. If it's empty or missing, it falls back to `cn`.
+
+**Constant Value**
+
+You can assign a fixed value by using an object with a `value` field.
+```json
+{
+  "metadata.my_attr": { "value": "MY_CONSTANT_VALUE" }
+}
+```
+This always sets `metadata.my_attr` in PlusAuth to `"MY_CONSTANT_VALUE"`.
+
+
+
+{% alert %}
+  You can use following command to get your AD user's all attributes. Replace `##Username##` with a valid username.
+```shell
+get-aduser ##Username## -Properties *
+```
+{% /alert %}
+
+### Required Mapping Fields
+
 You don't need to map all the fields but some are required. Required ones are:
 
-| Configuration      | Description                                                                                                                                                                                                                                                                                                                  |
-|--------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **id**             | In some cases, we must ensure that we are dealing with the same user. For that we need a unique identifier. Providing non-unique value would lead unexpected results and errors. Most common values are `objectGUID`,`uidNumber`,`objectSID` or `entryUUID`                                                                  |
-| **username**       | Your LDAP user's username field which will be queried for the authentication.  For many LDAP server vendors it can be `uid`. For Active directory it can be `sAMAccountName` or `cn`. Make sure your AD/LDAP user's contain this attribute as missing ones will not be able to log in to your application.                   |
-| **object_classes** | Existing `objectClass` attributes for your LDAP users. Divided by comma. Most common ones: `inetOrgPerson`, `organizationalPerson`. If `Write mode` is enabled newly created PlusAuth users will be created on your AD/LDAP with all those object classes. Make sure other mapped fields belongs to provided object classes. |
-| **email**          | Required for reset password functionality. Most common attribute is `mail`                                                                                                                                                                                                                                                   |
+| Key                                                                                                                                                                                                                                                                                                                | Description                                                                                                                                                                                                                                                                                                                  |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **id**                                                                                                                                                                                                                                                                                                                       | In some cases, we must ensure that we are dealing with the same user. For that we need a unique identifier. Providing non-unique value would lead unexpected results and errors. Most common values are `objectGUID`,`uidNumber`,`objectSID` or `entryUUID`                                                                  |
+| **username**                                                                                                                                                                                                                                                                                                                 | Your LDAP user's username field which will be queried for the authentication.  For many LDAP server vendors it can be `uid`. For Active directory it can be `sAMAccountName` or `cn`. Make sure your AD/LDAP user's contain this attribute as missing ones will not be able to log in to your application.                   |
+| **object\_classes**                                                                                                                                                                                                                                                                                                          | Existing `objectClass` attributes for your LDAP users. Divided by comma. Most common ones: `inetOrgPerson`, `organizationalPerson`. If `Write mode` is enabled newly created PlusAuth users will be created on your AD/LDAP with all those object classes. Make sure other mapped fields belongs to provided object classes. |
+| **email**                                                                                                                                                                                                                                                                                                                    | Required for reset password functionality. Most common attribute is `mail`                                                                                                                                                                                                                                                   |
 
 Other fields are optional but in some cases they may be crucial to set, otherwise some flows will not work as expected or
 some AD/LDAP users would lack some functionality. For example, if you are using SMS Multi-Factor Authentication in your
-application, as you guess, a phone number is required. If your AD/LDAP users already have a phone number you
+application, as you would guess, a phone number is required. If your AD/LDAP users already have a phone number you
 should map its attribute too.
+
+{% alert %}
+PlusAuth automatically converts `objectGUID`, `objectSid` attributes to their string representation.
+`jpegPhoto` and `thumbnailPhoto` attributes are converted to [Data URL](https://developer.mozilla.org/en-US/docs/Web/URI/Reference/Schemes/data)'s.
+Additionally, `logonHours` is parsed as following format:
+```ts
+// array of objects
+{
+    day: string
+    hour: number
+    allowed: boolean
+}[]
+```
+{% /alert %}
+
+## Password Caching
+PlusAuth supports caching AD/LDAP users' passwords in its database.
+This ensures availability even when your AD/LDAP instance is not reachable.
+
+To enable this feature, set the `password` property to `true` in your AD/LDAP connection's mappings. 
+
+Example:
+```json
+{
+  "id": "objectGUID",
+  "password": true,
+  //... (other mappings)
+}
+```
+
+After setting the mapping, whenever an AD/LDAP user authenticates successfully, their password will be stored in the user credentials.
