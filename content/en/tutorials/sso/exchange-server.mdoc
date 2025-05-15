@@ -30,14 +30,14 @@ This guide walks you through integrating Microsoft Exchange Server with PlusAuth
 
 ## 1. Create a PlusAuth Client
 
-- Navigate to **Dashboard > Clients** in your PlusAuth console.
-- Click the **Create** button to create a new client.
-- Select **Regular Web App** as the client type and give it an identifiable name.
+1. Navigate to **Dashboard > Clients** in your PlusAuth console.
+2. Click the **Create** button to create a new client.
+3. Select **Regular Web App** as the client type and give it an identifiable name.
 
   ![exchange-img_1.png](./img/exchange/exchange-img_1.png)
 
-- After creating the client, go to its **Details** page and open the **Connectors** tab.
-- Select **WS-Fed** as the connector type.
+4. After creating the client, go to its **Details** page and open the **Connectors** tab.
+5. Select **WS-Fed** as the connector type.
 
 Now, configure WS-Federation settings:
 
@@ -52,24 +52,24 @@ Now, configure WS-Federation settings:
 
 ## 2. Download and Install Certificate on Exchange Server
 
-- After saving WS-Federation settings, click on the **Metadata** button right above the form.
-- Click **Download Certificate** and save it to your Exchange Server machine. You can also copy certificate contents and paste them in a file with `.crt` extension.
-- Copy and securely store the **Certificate Thumbprint** — you will need it later.
+1. After saving WS-Federation settings, click on the **Metadata** button right above the form.
+2. Click **Download Certificate** and save it to your Exchange Server machine. You can also copy certificate contents and paste them in a file with `.crt` extension.
+3. Copy and securely store the **Certificate Thumbprint** — you will need it later.
 
 Next, install the downloaded certificate into the **Trusted People** store on the Exchange Server:
 
-- Open the **Run** dialog (Win + R), type `mmc`, and press Enter.
-- In the Management Console, go to **File > Add or Remove Snap-ins (Ctrl + M)**.
-- Find and add **Certificates** from the left panel.
-- In the Certificate Snap-In window:
-  - Choose **Computer account** and click **Next**.
-  - Select **Local Computer** and click **Finish**.
-- In the console tree, expand **Certificates (Local Computer) > Trusted People**.
-- Right-click **Trusted People > All Tasks > Import**.
-- Follow the Import Wizard:
-  - Choose the downloaded certificate.
-  - Click **Next** through the steps and **Finish**.
-- Close the Management Console without saving the snap-in layout.
+1. Open the **Run** dialog (Win + R), type `mmc`, and press Enter.
+2. In the Management Console, go to **File > Add or Remove Snap-ins (Ctrl + M)**.
+3. Find and add **Certificates** from the left panel.
+4. In the Certificate Snap-In window:
+  1. Choose **Computer account** and click **Next**.
+  2. Select **Local Computer** and click **Finish**.
+5. In the console tree, expand **Certificates (Local Computer) > Trusted People**.
+6. Right-click **Trusted People > All Tasks > Import**.
+7. Follow the Import Wizard:
+  1. Choose the downloaded certificate.
+  2. Click **Next** through the steps and **Finish**.
+8. Close the Management Console without saving the snap-in layout.
 
 ---
 
@@ -77,7 +77,7 @@ Next, install the downloaded certificate into the **Trusted People** store on th
 
 Now, configure Exchange Server to trust PlusAuth by executing the following commands in the **Exchange Management Shell**:
 
-- First, define the accepted URLs for OWA and ECP endpoints:
+1. Define the accepted URLs for OWA and ECP endpoints:
   ```powershell
   $uris=@(
     "https://##Base URL##/owa/",
@@ -88,7 +88,7 @@ Now, configure Exchange Server to trust PlusAuth by executing the following comm
   ```
   Replace `##Base URL##` with your actual OWA hostname.
 
-- Next, configure WS-Federation settings:
+2. Configure WS-Federation settings:
 
   ```powershell
   Set-OrganizationConfig -AdfsIssuer "##PlusAuth Issuer##" -AdfsAudienceUris $uris -AdfsSignCertificateThumbprint "##Cert Thumbprint##"
@@ -98,7 +98,7 @@ Now, configure Exchange Server to trust PlusAuth by executing the following comm
   `##PlusAuth Issuer##`: The WS-Federation Reply URL from PlusAuth.
 
   `##Cert Thumbprint##`: The SHA-1 thumbprint of the certificate you downloaded earlier.
-- Disable other authentication methods to force PlusAuth authentication:
+3. Disable other authentication methods to force PlusAuth authentication:
 
   First disable for ECP (Exchange Control Panel)
   ```powershell
@@ -110,27 +110,23 @@ Now, configure Exchange Server to trust PlusAuth by executing the following comm
   ```powershell
   Get-OwaVirtualDirectory | Set-OwaVirtualDirectory -AdfsAuthentication $true -BasicAuthentication $false -DigestAuthentication $false -FormsAuthentication $false -WindowsAuthentication $false -OAuthAuthentication $false
   ```
-- Finally, restart IIS services to apply your changes:
+4. Restart IIS services to apply your changes:
   ```powershell
   net stop was /y
   net start w3svc
   ```
 
 
-## Create AD/LDAP Connection
-- Go to `Dashboard > Connections`
-- Create a new `AD / LDAP` Enterprise connection
-- Enter name, and select the client created above.
-- Fill required fields according to your AD/LDAP connection.
-- After creating the connection, toggle "Default Connection" to make it the default for your tenant.
+## 4. Create AD/LDAP Connection
+1. Go to `Dashboard > Connections`
+2. Create a new `AD / LDAP` Enterprise connection
+3. Enter name, and select the client created above.
+4. Fill required fields according to your AD/LDAP connection.
+5. After creating the connection, toggle **Default Connection** to make it the default for your tenant.
 
+For more details on creating AD/LDAP connection, have a look at [AD/LDAP Connections](/concepts/authentication/identity-providers/ldap)
 
-{% alert %}
-  You can use following command to get your AD user's all attributes. Replace `##Username##` with a valid username.
-```shell
-get-aduser ##Username## -Properties *
-```
-{% /alert %}
+## 5. Test login
+1. Navigate to owa login page, For example, [https://mail.example.com/owa/]
+2. You should be redirected to PlusAuth's login screen.
 
-## Test login
-   - Go to owa login page

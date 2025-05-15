@@ -10,6 +10,9 @@ keywords:
   - fortigate vpn
   - vpn mfa
 ---
+
+## Overview
+
 In this configuration, the FortiGate acts as a SAML service provider (SP) requesting authentication from PlusAuth, which acts as a SAML identity provider (IdP).
 The following shows the topology for this setup:
 
@@ -30,7 +33,7 @@ The authentication process is as follows in this deployment:
 The example assumes that you already have a PlusAuth account.
 This example uses users locally defined within the PlusAuth and your plan allows SAML connections.
 
-## Configure PlusAuth for SSL VPN with FortiOS
+## 1. Configure PlusAuth for SSL VPN with FortiOS
 
 1. Log in to the PlusAuth dashboard as the registered user.
 2. Add the FortiGate application:
@@ -59,7 +62,7 @@ This example uses users locally defined within the PlusAuth and your plan allows
         2. Assign it to the user from the **Users** tab in the role details page.
 
 
-## Configure FortiGate
+## 2. Configure FortiGate
 
 1. Upload the certificate downloaded from client metadata to FortiGate
   1. Go To **System > Certificates**
@@ -112,7 +115,7 @@ config system global
 end
 ```
 
-## End Result
+## 3. End Result
 
 <video width="100%" height="auto" controls="true">
   <source src="./video/forti-sso.mp4" type="video/mp4" />

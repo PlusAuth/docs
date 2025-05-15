@@ -169,12 +169,11 @@ After completing all configuration steps, commit the changes to the firewall for
 1. Click **Commit** in the top right corner of the firewall's web interface.
 2. Review the changes and click **Commit** again.
 
-### Verification
+## Verification
 
 After committing the changes, test the GlobalProtect VPN connection using a client device. Users should now be prompted
-for their credentials, which will be authenticated against the configured RADIUS server. Check the firewall's system
-logs (Monitor > Logs > System) and traffic logs for any RADIUS or GlobalProtect related messages to troubleshoot if
-necessary. Ensure your RADIUS server also shows successful authentication attempts.
+for their credentials, which will be authenticated against the configured RADIUS server. 
 
-By following these steps, you can successfully integrate PlusAuth with your Palo Alto Networks
-GlobalProtect deployment, enhancing security and centralizing user authentication.
+Check the firewall's system logs (**Monitor > Logs > System**) and traffic logs for any RADIUS or 
+GlobalProtect related messages to troubleshoot if necessary. 
+Ensure your PlusAuth shows successful authentication attempts from [Dashboard > Logs](https://dashboard.plusauth.com/#logs).
