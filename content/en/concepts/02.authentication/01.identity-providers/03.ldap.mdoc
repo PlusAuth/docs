@@ -70,52 +70,57 @@ Each key expects a value of one of the following types:
 
 These values represent the **attribute name in the AD/LDAP user object**.
 
-**Boolean**
+{% tabs %}
+  {% tab-item label="Boolean" %}
 
-If the value is a `boolean` (`true`), the **same key** will be used to look up the corresponding attribute in the AD/LDAP user.
+  If the value is a `boolean` (`true`), the **same key** will be used to look up the corresponding attribute in the AD/LDAP user.
 
-```json
-{
-  "phone_number": true
-}
-```
-This configuration will look for the `phone_number` attribute in the AD/LDAP user object.
+  ```json
+  {
+    "phone_number": true
+  }
+  ```
+  This configuration will look for the `phone_number` attribute in the AD/LDAP user object.
+  
+  {% /tab-item %}
 
-**String**  
+  {% tab-item label="String" %}
+  If the value is a `string`, it specifies the exact attribute name to use in the AD/LDAP user object.
 
-If the value is a `string`, it specifies the exact attribute name to use in the AD/LDAP user object.
+  ```json
+  {
+    "username": "uid"
+  }
+  ```
+  This maps the `uid` attribute from AD/LDAP user to the `username` field in PlusAuth user.
 
-```json
-{
-  "username": "uid"
-}
-```
-This maps the `uid` attribute from AD/LDAP to the `username` field in PlusAuth.
+  {% /tab-item %}
 
-**String Array**  
+  {% tab-item label="String Array" %}
+  If the value is a `string[]` (array of strings), each attribute is checked in order. The first one with a non-empty value will be used.
+  ```json
+  {
+    "name": [
+      "name",
+      "cn"
+    ]
+  }
+  ```
 
-If the value is a `string[]` (array of strings), each attribute is checked in order. The first one with a non-empty value will be used.
-```json
-{
-  "name": [
-    "name",
-    "cn"
-  ]
-}
-```
+  This checks the `name` attribute first. If it's empty or missing, it falls back to `cn`.
+  {% /tab-item %}
 
-This checks the `name` attribute first. If it's empty or missing, it falls back to `cn`.
+  {% tab-item label="Constant Value" %}
+  You can assign a fixed value by using an object with a `value` field.
+  ```json
+  {
+    "metadata.my_attr": { "value": "MY_CONSTANT_VALUE" }
+  }
+  ```
+  This always sets `metadata.my_attr` in PlusAuth user object to `"MY_CONSTANT_VALUE"`.
 
-**Constant Value**
-
-You can assign a fixed value by using an object with a `value` field.
-```json
-{
-  "metadata.my_attr": { "value": "MY_CONSTANT_VALUE" }
-}
-```
-This always sets `metadata.my_attr` in PlusAuth to `"MY_CONSTANT_VALUE"`.
-
+  {% /tab-item %}
+{% /tabs %}
 
 
 {% alert %}
