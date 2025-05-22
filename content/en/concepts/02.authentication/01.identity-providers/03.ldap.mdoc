@@ -81,7 +81,7 @@ These values represent the **attribute name in the AD/LDAP user object**.
   }
   ```
   This configuration will look for the `phone_number` attribute in the AD/LDAP user object.
-  
+
   {% /tab-item %}
 
   {% tab-item label="String" %}
@@ -134,12 +134,12 @@ get-aduser ##Username## -Properties *
 
 You don't need to map all the fields but some are required. Required ones are:
 
-| Key                                                                                                                                                                                                                                                                                                                | Description                                                                                                                                                                                                                                                                                                                  |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **id**                                                                                                                                                                                                                                                                                                                       | In some cases, we must ensure that we are dealing with the same user. For that we need a unique identifier. Providing non-unique value would lead unexpected results and errors. Most common values are `objectGUID`,`uidNumber`,`objectSID` or `entryUUID`                                                                  |
-| **username**                                                                                                                                                                                                                                                                                                                 | Your LDAP user's username field which will be queried for the authentication.  For many LDAP server vendors it can be `uid`. For Active directory it can be `sAMAccountName` or `cn`. Make sure your AD/LDAP user's contain this attribute as missing ones will not be able to log in to your application.                   |
-| **object\_classes**                                                                                                                                                                                                                                                                                                          | Existing `objectClass` attributes for your LDAP users. Divided by comma. Most common ones: `inetOrgPerson`, `organizationalPerson`. If `Write mode` is enabled newly created PlusAuth users will be created on your AD/LDAP with all those object classes. Make sure other mapped fields belongs to provided object classes. |
-| **email**                                                                                                                                                                                                                                                                                                                    | Required for reset password functionality. Most common attribute is `mail`                                                                                                                                                                                                                                                   |
+| Key                                                                                                                                                                                                                                                                                                                | Description                                                                                                                                                                                                                                                                                                                    |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **id**                                                                                                                                                                                                                                                                                                                       | In some cases, we must ensure that we are dealing with the same user. For that we need a unique identifier. Providing non-unique value would lead unexpected results and errors. Most common values are `objectGUID`,`uidNumber`,`objectSID` or `entryUUID`                                                                    |
+| **username**                                                                                                                                                                                                                                                                                                                 | Your LDAP user's username field which will be queried for the authentication.  For many LDAP server vendors it can be `uid`. For Active directory it can be `sAMAccountName` or `cn`. Make sure your AD/LDAP user's contain this attribute as missing ones will not be able to log in to your application.                     |
+| **object\_classes**                                                                                                                                                                                                                                                                                                          | Existing `objectClass` attributes for your LDAP users. Divided by comma. Most common ones: `inetOrgPerson`, `organizationalPerson`. If **Write Mode** is enabled newly created PlusAuth users will be created on your AD/LDAP with all those object classes. Make sure other mapped fields belongs to provided object classes. |
+| **email**                                                                                                                                                                                                                                                                                                                    | Required for reset password functionality. Most common attribute is `mail`                                                                                                                                                                                                                                                     |
 
 Other fields are optional but in some cases they may be crucial to set, otherwise some flows will not work as expected or
 some AD/LDAP users would lack some functionality. For example, if you are using SMS Multi-Factor Authentication in your
@@ -164,7 +164,7 @@ Additionally, `logonHours` is parsed as following format:
 PlusAuth supports caching AD/LDAP users' passwords in its database.
 This ensures availability even when your AD/LDAP instance is not reachable.
 
-To enable this feature, set the `password` property to `true` in your AD/LDAP connection's mappings. 
+To enable this feature, set the `password` property to `true` in your AD/LDAP connection's mappings.
 
 Example:
 ```json
@@ -176,3 +176,43 @@ Example:
 ```
 
 After setting the mapping, whenever an AD/LDAP user authenticates successfully, their password will be stored in the user credentials.
+
+## Importing AD/LDAP Users to PlusAuth
+By default PlusAuth will create a user entry to its internal database whenever an AD/LDAP user signs in successfully.
+If you need to import all AD/LDAP connection's users you can use AD/LDAP synchronization.
+Go to your connection details and switch to **Synchronize** tab.
+
+![ldap-sync.png](./assets/ldap-sync.png)
+
+To synchronize users PlusAuth needs an LDAP filter to fetch users. Default LDAP filter is `(objectClass=person)`
+which is too broad and may import unwanted entries, such as system or service accounts.
+To avoid this, you should provide a more specific filter.
+
+Here’s an example that:
+- Ensures only user accounts (not computers, groups, etc.) are included
+- Excludes disabled accounts
+- Filters out common Exchange-related system mailboxes
+
+```
+(
+  &(objectCategory=person)
+  (objectClass=user)
+  (!(userAccountControl:1.2.840.113556.1.4.803:=2))
+  (!(name=SystemMailbox*))
+  (!(name=HealthMailbox*))
+  (!(name=DiscoverySearchMailbox*))
+)
+```
+
+
+Once you've saved your custom LDAP filter, click the **Synchronize** button to begin
+importing AD/LDAP users into PlusAuth.
+
+Note that, the synchronization process may take some time depending on the size
+of your AD/LDAP directory.
+
+{% alert %}
+User synchronization respects your AD/LDAP configuration.
+Ensure your connection's **Search Base** and **User Object Mapping** settings
+are configured according to your needs.
+{% /alert %}
