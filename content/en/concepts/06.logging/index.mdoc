@@ -3,15 +3,55 @@ title: "Logs"
 meta_title: "What is PlusAuth"
 meta_description: "PlusAuth is a product provides authorization and authentication solution in a secure way."
 keywords:
-    - concepts
-    - plusauth
-    - use cases
-    - benefits
-    - why plusauth
-    - what is plusauth
+  - concepts
+  - plusauth
+  - use cases
+  - benefits
+  - why plusauth
+  - what is plusauth
 navigation:
-  hidden: true
   icon: i-ph-shield-star-duotone
   labelClass: text-lg
 ---
 
+The [Dashboard > Logs](https://dashboard.plusauth.com#logs) page is your central hub for understanding everything
+happening within your tenant. It provides a comprehensive, real-time view of all system and user events, making it an
+essential tool for monitoring activity, debugging issues, and performing security audits.
+
+## Exploring and Filtering Logs
+
+![Logs Page](./assets/log-page.svg)
+
+1. For powerful, specific searches, you can write precise queries in the search bar using
+   the [PlusAuth Query Language](/api/core/query-syntax).
+
+2. By default, the page shows logs from the **Last 24 hours**, but you can easily select another timeframe from the
+   dropdown in the top-right corner.
+
+3. For quicker filtering, the panel on the left allows you to instantly narrow the results by **Level** (such as
+   `Error`, `Warning`, or `Info`) or by a specific **Event** type like `Successful Login`. You can also search for a
+   specific user by their ID, email, username, or phone number using the dedicated user filter.
+
+4. The main part of the page is the central log stream, which presents a chronological list of events. Each row gives
+   you a quick summary, displaying the event's **Datetime (Local)**, a high-level **Event** description, and a more
+   detailed **Message**. Above the stream, an interactive bar chart visualizes the frequency of events, which is perfect
+   for spotting trends. You can click and drag on the graph to narrow down the time range.
+
+## Inspecting Log Details
+
+![Log Detail Pane](./assets/log-detail-pane.svg)
+
+When you need to investigate an event further, simply click on any row in the log stream.
+This opens the **Event Details** panel on the right, giving you a complete picture of what happened.
+
+1. The detail panel includes a summary of your log with a clear title and description.
+
+2. To make the rich data easier to work with, you can change its presentation. The default **Nested** view organizes it
+   hierarchically, the **Flat** view presents a simple key-value list, and the **Raw** view shows the complete, original
+   JSON object.
+
+3. You can navigate directly to related entities, like a user's profile, by clicking the arrow icon that appears next to
+   them.
+
+4. As you hover over any property, a helpful overlay appears. From here, you can instantly **copy the value**, add the
+   property as a column to the main log table for comparison, or filter for all logs that share that specific value.
