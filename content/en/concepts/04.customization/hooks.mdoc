@@ -114,23 +114,27 @@ and resulting context from the console window.
 
 ## Hook Context
 
-| key                       | description                                                          |
-|---------------------------|----------------------------------------------------------------------|
-| client                    | Client object that initiated the flow.                               |
-| user                      | PlusAuth user object.                                                |
-| context.externalUser      | External user object retrieved from external connection such as LDAP |
-| context.connection        | Current connection name                                              |
-| context.request.query     | Query parameters for initiated request                               |
-| context.request.body      | Request body for initiated request                                   |
-| context.request.headers   | Request headers for initiated request                                |
-| context.request.userAgent | UserAgent for initiated request                                      |
-| context.request.ip        | IP of incoming request                                               |
-| context.response.body     | Response body object                                                 |
-| context.response.headers  | Headers which will be sent                                           |
-| context.authParams        | Authorization related params.                                        |
-| context.accessToken       | Generated access token.                                              |
-| context.idToken           | Generated id token.                                                  |
-| context.mfa               | MFA related actions.                                                 |
+{% data-table
+    columns=["Key", "Description"]
+    data=[
+      { key: "client"                   , description: "Client object that initiated the flow"},
+      { key: "user"                     , description: "PlusAuth user object"},
+      { key: "context.externalUser"     , description: "External user object retrieved from external connection such as Facebook, LDAP, etc."},
+      { key: "context.connection"       , description: "Current connection name"},
+      { key: "context.request.query"    , description: "Query parameters for initiated request"},
+      { key: "context.request.body"     , description: "Request body for initiated request"},
+      { key: "context.request.headers"  , description: "Request headers for initiated request"},
+      { key: "context.request.userAgent", description: "UserAgent for initiated request"},
+      { key: "context.request.ip"       , description: "IP of incoming request"},
+      { key: "context.response.body"    , description: "Response body object"},
+      { key: "context.response.headers" , description: "Headers which will be sent"},
+      { key: "context.authParams"       , description: "Authorization related params"},
+      { key: "context.accessToken"      , description: "Generated access token"},
+      { key: "context.idToken"          , description: "Generated id token"},
+      { key: "context.mfa"              , description: "MFA related actions"}
+    ]
+/%}
+
 
 {% alert type="warning" %}
 Some of the properties listed above could be `undefined` or `null` in some hook types or flows.
