@@ -1,0 +1,223 @@
+---
+title: "Twig Introductory Guide"
+meta_title: "PlusAuth template engine documentation"
+meta_description: "PlusAuth is a product provides authorization and authentication solution
+ — in a secure way."
+keywords:
+    - concepts
+    - plusauth
+    - templates
+    - email
+    - sms
+    - custom email
+    - custom sms
+
+---
+
+PlusAuth uses [Twig](https://twig.symfony.com) as the templating language for its **Email** and **SMS** templates.
+Twig is a powerful template engine that allows you to embed logic inside text and generate **dynamic, personalized content** (e.g., inserting usernames, applying conditions, formatting values).
+
+This document provides an **introductory guide** to using Twig within PlusAuth.
+It highlights the supported syntax, available filters and functions (including [es-toolkit](https://es-toolkit.dev/reference/array/at.html) utilities), and the differences from standard Twig.
+
+For the complete reference, see the [official Twig documentation](https://twig.symfony.com/doc/3.x/templates.html).
+
+
+## Key Differences from Standard Twig
+
+* Features like `extends`, `block`, `import`, and `use` are **not supported** in PlusAuth.
+  Every template is **self-contained**.
+
+* If you reference a variable that does not exist, it will resolve to `null` instead of throwing an error.
+  This means you can safely use `{{ user.profile.first_name }}` without breaking the template if `user` or `profile` is missing.
+
+* In addition to the built-in Twig filters/functions, **all functions from [es-toolkit](https://es-toolkit.dev/reference/array/at.html)** are available as Twig filters and functions.
+  Example:
+
+  ```twig {% process=false %}
+  {{ "hello world"|camelCase }}
+  {{ range(1,10)|sum }}
+  ```
+
+---
+
+## Basic Syntax
+
+Twig has three types of delimiters:
+
+* `{{ ... }}` — **expressions** (output the result)
+* `{% ... %}` — **statements** (logic, loops, conditionals)
+* `{# ... #}` — **comments** (ignored in output)
+
+Example:
+
+```twig {% process=false %}
+<h1>Hello {{ user.email }}</h1>
+
+{% if user.email_verified %}
+  <p>Your email is verified</p>
+{% else %}
+  <p>Please verify your email</p>
+{% endif %}
+
+{# This is a comment #}
+```
+
+---
+
+## Variables
+
+Variables are provided by PlusAuth depending on context (user, application, session, etc.).
+
+* Dot syntax is used to access nested values:
+
+  ```twig {% process=false %}
+  {{ user.profile.family_name }}
+  ```
+* Missing variables resolve to `null` silently.
+
+## Operators
+
+Twig supports a variety of operators to work with values and expressions.
+Operators can be combined and grouped with parentheses `(...)` for clarity.
+
+### Arithmetic Operators
+
+```twig {% process=false %}
+{{ 1 + 2 }}       {# → 3 #}
+{{ 5 - 3 }}       {# → 2 #}
+{{ 2 * 3 }}       {# → 6 #}
+{{ 8 / 2 }}       {# → 4 #}
+{{ 7 % 3 }}       {# → 1 (modulus) #}
+{{ 20 // 7 }}     {# → 2 (floor division) #}
+{{ 2 ** 3 }}      {# → 8 (exponentiation) #}
+````
+
+### Comparison Operators
+
+```twig {% process=false %}
+{{ 5 == 5 }}      {# → true #}
+{{ 5 != 3 }}      {# → true #}
+{{ 4 > 3 }}       {# → true #}
+{{ 3 < 2 }}       {# → false #}
+{{ 5 >= 5 }}      {# → true #}
+{{ 2 <= 1 }}      {# → false #}
+```
+
+### Containment Operators
+
+```twig {% process=false %}
+{{ 'a' in 'apple' }}        {# → true #}
+{{ 2 in [1,2,3] }}          {# → true #}
+{{ 'x' not in 'apple' }}    {# → true #}
+{{ 'Hello' starts with 'H' }}  {# → true #}
+{{ 'World' ends with 'd' }}    {# → true #}
+```
+
+### Other Useful Operators
+
+```twig {% process=false %}
+{{ "Hello " ~ "World" }}   {# → "Hello World" (concatenation) #}
+{{ user.name ?? 'Guest' }} {# → first non-null value #}
+```
+
+---
+
+## Logic
+
+Twig supports common logical operators. They evaluate to boolean values (`true` or `false`).
+
+```twig {% process=false %}
+{% if user.active and user.verified %}
+  User is active and verified
+{% endif %}
+
+{% if user.role == 'admin' or user.role == 'owner' %}
+  Has elevated privileges
+{% endif %}
+
+{% if not user.suspended %}
+  Account is in good standing
+{% endif %}
+```
+
+### Examples
+
+```twig {% process=false %}
+{{ true and false }}   {# → false #}
+{{ true or false }}    {# → true #}
+{{ true xor true }}    {# → false (only one side must be true) #}
+{{ not false }}        {# → true #}
+```
+
+{% alert type="warning" %}
+Remember that missing variables in conditions (`if user.suspended`) will be treated as `null` (evaluating to `false`), not as an error.
+{% /alert %}
+
+
+---
+
+## Filters
+
+Filters transform values and are applied with the `|` operator.
+You can chain multiple filters together to process a value step by step.
+
+```twig {% process=false %}
+{{ user.email|lower }}
+{{ "hello world"|title|replace({'Hello':'Hi'}) }}
+````
+
+### Using es-toolkit as Filters
+
+In PlusAuth, all **es-toolkit** functions are also available as **Twig filters**.
+When used as filters:
+
+* The **value being piped** is passed as the **first argument** to the function.
+* Any additional arguments are passed inside the parentheses after the filter name.
+
+```twig {% process=false %}
+{{ "user_name"|camelCase }}        {# → userName #}
+{{ 150|clamp(0, 100) }}            {# → 100 #}
+```
+
+This makes it easy to use es-toolkit utilities naturally in your templates.
+
+---
+
+## Functions
+
+Functions are called with parentheses and can take one or more arguments.
+They return values that can be rendered directly or passed through filters.
+
+```twig {% process=false %}
+{{ range(1,5) }}   {# → [1,2,3,4,5] #}
+{{ min(4, 10) }}   {# → 4 #}
+````
+
+### Using es-toolkit as Functions
+
+**es-toolkit** utilities are also available as **Twig functions**.
+Unlike filters (which implicitly pass the value on the left as the first argument), functions are called explicitly with all their arguments.
+
+
+```twig {% process=false %}
+{{ isEmpty([]) }}               {# → true #}
+{{ uniq([1,1,2,3]) }}           {# → [1,2,3] #}
+{{ clamp(150, 0, 100) }}        {# → 100 #}
+{{ padStart("42", 5, "0") }}    {# → "00042" #}
+```
+
+This allows you to directly leverage the full power of es-toolkit inside templates.
+
+---
+
+
+## Whitespace Control
+
+You can trim spaces around tags:
+
+```twig {% process=false %}
+{%- if active -%}Yes{%- endif -%}
+```
+
+---
