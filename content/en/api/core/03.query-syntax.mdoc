@@ -1,13 +1,8 @@
 ---
-title: Query Syntax
-layout:
-  title: false
-  toc: false
+title: PlusAuth Query Language Reference
+navigation:
+  label: Query Syntax
 ---
-
-<article class="grid lg:grid-cols-2 gap-12">
-    <section>
-        <h1>PlusAuth Query Language Reference</h1>
 
 PlusAuth provides its own [CQL](https://wikipedia.org/wiki/Contextual_Query_Language) for querying over resources in an easy way.
  It will be referred as **PQL (PlusAuth Query Language)** in PlusAuth documentation.
@@ -90,63 +85,9 @@ name ILIKE "bc"   --> false
 
 `ILIKE` pattern matching always covers the entire string. Therefore, if it's desired to match a sequence anywhere within a string, the pattern must start and end with a percent sign.
 
+{% alert %}
+
 To match a literal underscore or percent sign without matching other characters, the respective character in pattern must be preceded by the escape character.
 The default escape character is the backslash (`\`) character.
 
-</section>
-<section>
-  <div class="card">
-    <div class="card-title">
-        PQL Operators
-    </div>
-    <div class="overflow-x-auto">
-      <table class="border-none text-tiny my-0">
-        <thead>
-        <tr>
-            <th class="ps-2 py-2 text-center">Operator</th>
-            <th class="py-2 text-left">Description</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr>
-            <td class=" text-center font-bold py-2">=</td>
-            <td class="py-2">Equal</td>
-        </tr>
-        <tr>
-            <td class=" text-center font-bold py-2">!=</td>
-            <td class="py-2">Not equal</td>
-        </tr>
-        <tr>
-            <td class=" text-center font-bold py-2">&lt;</td>
-            <td class="py-2">Less than</td>
-        </tr>
-        <tr>
-            <td class=" text-center font-bold py-2">&gt;</td>
-            <td class="py-2">Greater than</td>
-        </tr>
-        <tr>
-            <td class=" text-center font-bold py-2">&lt;=</td>
-            <td class="py-2">Less than or equal</td>
-        </tr>
-        <tr>
-            <td class=" text-center font-bold py-2">&gt;=</td>
-            <td class="py-2">Greater than or equal</td>
-        </tr>
-        <tr>
-            <td class=" text-center font-bold py-2">AND</td>
-            <td class="py-2">Checks if all the statements separated by it are true</td>
-        </tr>
-        <tr>
-            <td class=" text-center font-bold py-2">OR</td>
-            <td class="py-2">Checks if any of the statements separated by it are true</td>
-        </tr>
-        <tr>
-            <td class=" text-center font-bold py-2">IN</td>
-            <td class="py-2">Matches value in a list of values</td>
-        </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</section>
-</article>
+{% /alert %}
