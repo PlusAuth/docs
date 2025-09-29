@@ -1,59 +1,33 @@
 ---
-title: "Emails"
-meta_title: "Configure Emails"
-meta_description: "Learn how to configure and customize emails in PlusAuth — a secure authentication and authorization platform."
+title: "Customizing Templates"
+meta_title: "Customizing  Templates"
+meta_description: "Learn how to configure and customize templates in PlusAuth — a secure authentication and authorization platform."
 keywords:
   - concepts
   - plusauth
-  - email
-  - customize email
+  - template
+  - customize template
 ---
 
-PlusAuth allows you to fully customize the emails sent from your system. Multiple template engines are supported, so you can choose the one that best fits your needs.
-
-## Configuring an Email Provider
-
-To set up your email provider:
-
-1. Navigate to [**Dashboard > Settings > Email Provider**](https://dashboard.plusauth.com/#settings/email-provider).
-2. Select one of the available providers.
-3. Enter the required configuration details for your chosen provider.
-
-![Email Configuration](./assets/email-configuration.png)
-
-## Customizing Email Templates
-
-Every email used by PlusAuth can be tailored to match your branding and communication style. To edit a template:
-
-1. Go to [**Dashboard > Customization > Email Templates**](https://dashboard.plusauth.com/#customization/email-templates).
-2. Click on the template you want to customize.
-
 PlusAuth uses [Twig](https://twig.symfony.com/doc/3.x/templates.html) as its templating engine.
-We've prepared an [**Introductory Guide to Twig**](/concepts/customization/introduction-to-twig) to help you get started.
+We've prepared an [**Introductory Guide to Twig**](/concepts/customization/templates/introduction-to-twig) to help you get started.
 
-Both **From** and **Subject** fields support Twig syntax, meaning you can use dynamic variables in these fields as well.
-
-
-### Preview and Variables
+## Preview and Variables
 
 When editing a template:
 
-- Switch to the **Preview** tab to see how your email will look.
+- Switch to the **Preview** tab to see how your template will look.
 - Use the **Edit preview variables** button above the editor to adjust test data.
 
 {% alert type="warn" %}
-These preview variables are only for testing. If you modify the keys of the preview JSON, they may not exist in real usage.
+Preview variables are only for testing purposes. Changes made to the preview JSON do not affect real usage.
 {% /alert %}
 
 
-{% tabs %}
-![Template Editor](./assets/email-template-screen.png "Email Template")
-![Preview Mode](./assets/email-preview.png "Email Preview")
-{% /tabs %}
 
-### Available Variables
+## Available Variables
 Each template may have a different set of variables.
-You can find the list of variables for each template in their preview variables from dashboard.
+You can find the list of variables for each template in their preview variables from the dashboard.
 The following variables are available for every template:
 
 {% data-table
@@ -71,10 +45,10 @@ data=[
 
 
 
-### Localizing Emails
-The most straightforward way to localize your emails is to use the `user.profile.locale` variable.
+## Localizing Templates
+The most straightforward way to localize your templates is to use the `user.profile.locale` variable.
 
-You can use the `request.language` variable to localize your email templates.
+You can use the `request.language` variable to localize your templates.
 This variable contains the language code that represents the user's preferred language.
 
 The value of `request.language` is determined from:

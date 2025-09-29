@@ -14,7 +14,6 @@ keywords:
 
 ---
 
-PlusAuth uses [Twig](https://twig.symfony.com) as the templating language for its **Email** and **SMS** templates.
 Twig is a powerful template engine that allows you to embed logic inside text and generate **dynamic, personalized content** (e.g., inserting usernames, applying conditions, formatting values).
 
 This document provides an **introductory guide** to using Twig within PlusAuth.
@@ -31,7 +30,7 @@ For the complete reference, see the [official Twig documentation](https://twig.s
 * If you reference a variable that does not exist, it will resolve to `null` instead of throwing an error.
   This means you can safely use `{{ user.profile.first_name }}` without breaking the template if `user` or `profile` is missing.
 
-* In addition to the built-in Twig filters/functions, **all functions from [es-toolkit](https://es-toolkit.dev/reference/array/at.html)** are available as Twig filters and functions.
+* In addition to the built-in Twig filters/functions, **all functions** from [es-toolkit](https://es-toolkit.dev/reference/array/at.html) are available as Twig filters and functions.
   Example:
 
   ```twig {% process=false %}

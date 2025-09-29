@@ -1,0 +1,47 @@
+---
+title: "Customize Emails"
+meta_title: "Customize Emails"
+meta_description: "Learn how to configure and customize emails in PlusAuth — a secure authentication and authorization platform."
+keywords:
+  - concepts
+  - plusauth
+  - email
+  - customize email
+---
+
+Every email used by PlusAuth can be tailored to match your branding and communication style. To edit a template:
+
+1. Go to [**Dashboard > Customization > Email Templates**](https://dashboard.plusauth.com/#customization/email-templates).
+2. Click on the template you want to customize.
+
+Both **From** and **Subject** fields support dynamic templating, meaning you can use dynamic variables in these fields as well.
+
+Every variable in our [templating guide](/concepts/customization/templates/customizing-templates#available-variables) are available.
+Some templates may have additional variables.
+You can see final variables in the related template's page (**Dashboard > Customization > Email Templates > \[Template]**) within the Preview Variables editor.
+
+
+![Template Editor](../assets/email-template.png "Email Template")
+
+## Configuring an Email Provider
+
+To set up your email provider:
+
+1. Navigate to [**Dashboard > Settings > Email Provider**](https://dashboard.plusauth.com/#settings/email-provider).
+2. Select one of the available providers.
+3. Enter the required configuration details for your chosen provider.
+
+![Email Configuration](../assets/email-configuration.png)
+
+## Manually Sending Emails
+
+### Sending Email Verification Email
+
+From your application, you can send an email verification email to the user's email address by calling the following API endpoint:
+[Create Email Verification Ticket](/api/core/-/tickets/create-verify-email-ticket)
+
+### Sending Password Reset Email
+From your application, you can send a password reset email to the user's email address by calling the following API endpoint:
+[Create Password Reset Ticket](/api/core/-/tickets/create-password-reset-ticket)
+
+
