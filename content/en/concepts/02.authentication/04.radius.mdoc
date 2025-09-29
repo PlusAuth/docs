@@ -19,7 +19,7 @@ are not modifiable by the tenant.
 To ensure security and seamless operation, the RADIUS server only accepts
 requests from IP addresses or networks explicitly authorized by you.
 
-![plusauth-radius-configuration](./img/plusauth-radius.png)
+![plusauth-radius-configuration](./assets/radius.png)
 
 ## Enabling RADIUS Authentication
 
@@ -34,12 +34,12 @@ You can retrieve them from the RADIUS configuration screen, but you **cannot mod
 - **IP Address**: You must use PlusAuth installation's internal IP address to access the RADIUS server.
 - **Port**: Used by RADIUS clients to send authentication requests.
 - **Secret**: A secure shared key that must be configured in all RADIUS clients
-- to establish trust with your IAM tenant.
 
 Always ensure that RADIUS clients are configured to use the exact port and
 secret as provided.
 
-## Defining Specific Connection
+## Configuring RADIUS Server Behavior
+### Defining Specific Connection
 
 You can scope RADIUS authentication to a specific connection within your tenant.
 If a connection is selected, only users within that
@@ -52,7 +52,7 @@ as these identities do not include native credentials that can be
 verified within PlusAuth.
 
 
-## Inline MFA Factor Support
+### Inline MFA Factor Support
 
 For tenants with multifactor authentication (MFA) enabled, PlusAuth supports
 inline MFA challenges. When this option is enabled, users must supply both their
@@ -70,7 +70,29 @@ In this case, the platform expects the credentials to be separated by a specific
 character. You can configure this with **Challenge Separator** setting (e.g., a hyphen, colon, or
 space) to match your RADIUS client's formatting.
 
-## IP Address Restrictions
+
+### Client IP Resolution
+In RADIUS packets, the client's actual IP address may not always be found in a single standard attribute,
+since different devices or network setups can send this information in different fields.
+To handle this variation, PlusAuth allows you to define which RADIUS attributes
+should be checked to determine the client's IP with **Client IP Address Attribute** setting.
+
+One or more attribute names can be specified, separated by semicolons (`;`).
+They are evaluated in order, and the first attribute that contains a value will be used.
+
+
+**Example:**
+
+```
+Calling-Station-Id;Framed-IP-Address;Client-Source-IP
+```
+
+
+In this example, the system first checks `Calling-Station-Id`.
+If unavailable, it continues with `Framed-IP-Address`, then `Client-Source-IP`, until a value is found.
+
+
+### IP Address Restrictions
 
 To secure your tenant's RADIUS endpoint, you must specify which client
 IP addresses or network ranges are allowed to connect. This limits access
