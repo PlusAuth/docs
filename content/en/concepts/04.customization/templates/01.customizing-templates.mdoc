@@ -9,8 +9,11 @@ keywords:
   - customize template
 ---
 
-PlusAuth uses [Twig](https://twig.symfony.com/doc/3.x/templates.html) as its templating engine.
-We've prepared an [**Introductory Guide to Twig**](/concepts/customization/templates/introduction-to-twig) to help you get started.
+PlusAuth uses [Twig](https://twig.symfony.com/doc/3.x/templates.html) as its templating engine. This makes it possible to dynamically personalize emails and SMS messages based on user data, application information, or request context.
+For example, you can insert a user's name, check their locale, or adjust content depending on the client application.
+
+To help you get started, we’ve prepared an [Introductory Guide to Twig](/concepts/customization/templates/introduction-to-twig).
+It covers the basics of syntax, variables, filters, functions, and operators, so you can start customizing your templates right away.
 
 ## Preview and Variables
 
@@ -33,7 +36,7 @@ The following variables are available for every template:
 {% data-table
 columns=["Key", "Description"]
 data=[
-{ key: "request.language"      , description: "Language parameter of request. See [Localization](#localizing-templates)"},
+{ key: "request.language"      , description: "Language parameter of request. See [Localizing Templates](#localizing-templates)"},
 { key: "application.name"      , description: "Initiating Client's name"},
 { key: "application.id"        , description: "Initiating Client's id"},
 { key: "application.metadata"  , description: "Initiating Client's metadata"},
@@ -46,15 +49,16 @@ data=[
 
 
 ## Localizing Templates
-The most straightforward way to localize your templates is to use the `user.profile.locale` variable.
+The most straightforward way to localize your templates is by using the `user.profile.locale` variable.
+This value is **managed by your application**. You must update the `user.profile.locale` field through the
+PlusAuth REST API by calling [Update User](/api/core/-/users/update-user) endpoint
+whenever a user's preferred language changes (for example, when they choose a language in your app settings).
 
-You can use the `request.language` variable to localize your templates.
-This variable contains the language code that represents the user's preferred language.
+Alternatively, you can use the `request.language` variable.
+This variable represents the language code derived from the incoming request and is resolved as follows:
 
-The value of `request.language` is determined from:
-
-- **`X-Request-Language` header** – You can explicitly set this header to send a custom locale value.
-- **[`Accept-Language`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language) header** – This header is sent automatically by browsers to indicate the user's preferred languages.
+- `X-Request-Language` header – You can explicitly set this header to send a custom locale value.
+- <code>[Accept-Language](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language)</code> header – This header is sent automatically by browsers to indicate the user's preferred languages.
 
 If both headers are present, `X-Request-Language` takes priority.
 This allows you to override the browser's default language when needed.
