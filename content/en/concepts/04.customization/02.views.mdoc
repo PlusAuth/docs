@@ -14,6 +14,8 @@ PlusAuth lets you customize every view served by it. Go to [Dashboard > Customiz
 There is no limitation in views, you can write any HTML/CSS/JS as long as you make the required requests to PlusAuth.
 You can have a look to [Web API](/en/api/web) for the corresponding requests to each page.
 
+Default views are rendered by using our [widget library](https://github.com/PlusAuth/plusauth-widget). It is highly
+customizable and could help you to build your own custom views without too much effort.
 
 {% alert %}
 Functionality of previews will be limited. For example, you cannot sign in or register from the preview.
@@ -81,3 +83,25 @@ Here is an example context object:
   }
 }
 ```
+
+## Tips for Writing Custom PlusAuth Views
+
+Below are a few practices and recommendations to help you build custom views.
+
+- **Use the PlusAuth Web API**
+
+  Always use the official [Web API](/api/web) to interact with the platform.
+
+- **Implement Proper Error States**
+
+  Handle all possible outcomes, including failed logins, expired sessions, and invalid redirect URIs.
+  Provide user-friendly messages while avoiding disclosure of sensitive details (e.g., "invalid credentials” instead of "wrong password for john@example.com”).
+
+- **Use CDN for Asset Delivery**
+
+  Serve your custom assets (images, fonts, libraries, etc.) by using a CDN such as [Cloudflare](https://www.cloudflare.com/) or [Amazon CloudFront](https://aws.amazon.com/cloudfront/) or your own static asset server.
+
+- **Test on All Flows**
+
+  Custom views may be used in multiple contexts — login, signup, MFA, password reset, and consent.
+  Always test each flow to confirm redirect and token exchange behavior work as expected.
