@@ -1,0 +1,62 @@
+---
+title: "Authorization"
+meta_description: "PlusAuth is a product provides authorization and authentication solution in a secure way."
+keywords:
+    - concepts
+    - plusauth
+    - use cases
+    - benefits
+    - why plusauth
+    - what is plusauth
+navigation:
+  icon: i-solar-shield-user-bold-duotone
+---
+
+PlusAuth provides a powerful and flexible permission management system that allows fine-grained control over what users, applications, and resources can access.
+Permissions can be assigned directly to users or indirectly through roles and role groups, and are ultimately reflected in the user's `access_token` as scopes.
+
+---
+## Core Concepts
+
+### Resource
+A **Resource** represents a protected entity (for example, an API or service) that enforces access control.
+Each resource is uniquely identified by its **audience** (`aud`) parameter.
+
+A resource also defines:
+- Which **Clients (Applications)** are allowed to request tokens for it.
+- Which **Permissions** are available within that resource.
+
+Permissions are always defined **per resource**.
+When managing permissions in the dashboard, you can select the active resource from the **top-left dropdown** in the **Permission Graph view**.
+
+---
+
+### Permission
+A **Permission** represents a specific action or capability within a resource (for example, `read:user`, `update:profile`, `delete:post`).
+Permissions are assigned:
+- Directly to **users**, or
+- Indirectly via **roles** and **role groups**.
+
+The effective permissions granted to a user determine which permissions(scopes) will appear in their access token.
+
+---
+
+### Role
+A **Role** is a named collection of permissions within a resource.
+Roles simplify permission management by grouping related permissions together (e.g., `admin`, `editor`, `viewer`).
+
+Roles can:
+- Contain multiple **permissions**.
+- Be assigned to **users**.
+- Be assigned to **role groups**.
+- Be configured to **auto-assign** to new users during signup.
+
+---
+
+### Role Group
+A **Role Group** is a higher-level container that groups multiple roles together.
+Assigning a role group to a user effectively grants all permissions contained in the included roles.
+
+Like roles, role groups can also be configured for **automatic assignment** upon user creation.
+
+---

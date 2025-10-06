@@ -1,0 +1,136 @@
+---
+title: "Permission Resolution Overview"
+meta_description: "PlusAuth is a product provides authorization and authentication solution in a secure way."
+keywords:
+    - concepts
+    - plusauth
+    - use cases
+    - benefits
+    - why plusauth
+    - what is plusauth
+---
+
+The following diagram illustrates how PlusAuth determines a user's **effective permissions (scopes)**
+for a specific resource when a client requests an access token.
+
+{% mermaid %}
+``` {% process=false %}
+flowchart TB
+    %% === INPUT LEVEL ===
+    subgraph INPUTS
+        direction LR
+        F["Client (Application)"]
+        U["User"]
+    end
+
+
+    %% === RESOURCE DEFINITION ===
+    A["Resource (identified by 'audience')"]
+
+    %% === USER PERMISSIONS COMPOSITION ===
+    B["Direct Permissions"]
+    C["Roles"]
+    D["Role Groups"]
+    E["Permissions from Roles"]
+    F2["Permissions from Role Groups"]
+    M["All User Permissions (Merged per Resource)"]
+
+    %% === FILTER & OUTPUT ===
+    X["Filter: Allowed Permissions for this Client–Resource"]
+    T["Final Permissions"]
+
+    %% === FLOWS ===
+    F --> A
+    A --> X
+    U --> B
+    U --> C
+    U --> D
+    C --> E
+    D --> F2
+    B --> M
+    E --> M
+    F2 --> M
+    M --> X
+    X --> T
+
+    %% === STYLING ===
+    classDef entity fill:#fef6e4,stroke:#f1c40f,stroke-width:1.5px;
+    classDef permission fill:#e6f4ea,stroke:#27ae60,stroke-width:1.5px;
+    classDef flow fill:#e8f0fe,stroke:#2980b9,stroke-width:1.5px;
+    classDef filter fill:#fdebd0,stroke:#f39c12,stroke-width:2px,stroke-dasharray: 3 3;
+    classDef final fill:#fff3cd,stroke:#e67e22,stroke-width:2px,font-weight:bold;
+
+    %% Hide the subgraph's background and border
+    style INPUTS color:transparent
+    style INPUTS stroke-width:0px;
+    style INPUTS fill:none;
+
+
+    %% Assign node styles
+    class A,F entity
+    class U,C,D flow
+    class B,E,F2,M permission
+    class X filter
+    class T final
+```
+{% /mermaid  %}
+
+
+
+#### 1. Access Context: Client → Resource
+
+Every request starts when a **Client (Application)** asks for access to a **Resource**, identified by its `audience`.
+Each resource defines:
+
+* Which clients are allowed to request tokens for it, and
+* Which permissions those clients are allowed to use.
+
+This establishes the *access boundary* for the rest of the process.
+
+{% alert type="warn" %}
+If the client is not allowed to access the resource, the request is rejected.
+{% /alert %}
+
+#### 2. User Context and Permission Sources
+
+In parallel, PlusAuth collects all permissions that belong to the **User** for the same resource:
+
+1. **Direct Permissions** – permissions explicitly assigned to the user.
+2. **Roles** – sets of permissions grouped under a role name.
+3. **Role Groups** – higher-level groupings that contain multiple roles.
+
+Roles and role groups are expanded step by step:
+
+* **Roles → Permissions** – each role's permissions are added.
+* **Role Groups → Roles → Permissions** – role groups are resolved into their included roles, and then into permissions.
+
+All of these are merged into a unified set of user permissions per resource.
+
+#### 3. Permission Filtering by Resource-Client Rules
+
+Once the full list of user permissions is built, PlusAuth filters it through the **Resource-Client** configuration.
+Only permissions that satisfy *both* conditions are kept:
+
+* The **user** possesses the permission, **and**
+* The **client** is allowed to use that permission for this resource.
+
+Any permission outside the client–resource's allowed list is discarded, even if the user has it.
+
+#### 4. Final
+
+The resulting intersection of permissions becomes the **effective scopes** for this authentication context.
+These are embedded into the user's access token.
+
+
+| Stage                           | Description                                                 |
+|---------------------------------|-------------------------------------------------------------|
+| **Client requests access**      | Client asks for access to a specific resource (`audience`). |
+| **Resource defines policy**     | Determines which clients and permissions are valid.         |
+| **User permissions gathered**   | Collect direct, role, and role-group permissions.           |
+| **Roles and groups expanded**   | Resolve indirect assignments into explicit permissions.     |
+| **Permissions merged**          | Combine all user permissions per resource.                  |
+| **Filtered by resource-client** | Keep only permissions allowed for that client.              |
+| **Final**                       | Final permissions are retrieved.                            |
+
+
+This model allows PlusAuth to provide granular, resource-based access control that scales from simple role-based setups to complex multi-resource permission hierarchies.
