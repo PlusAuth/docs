@@ -1,5 +1,5 @@
 ---
-title: "Permission Resolution Overview"
+title: "Manage Access Control"
 meta_description: "PlusAuth is a product provides authorization and authentication solution in a secure way."
 keywords:
     - concepts
@@ -10,8 +10,77 @@ keywords:
     - what is plusauth
 ---
 
-The following diagram illustrates how PlusAuth determines a user's **effective permissions (scopes)**
-for a specific resource when a client requests an access token.
+
+PlusAuth provides a powerful and flexible permission management system that allows fine-grained control over what users, applications, and resources can access.
+Permissions can be assigned directly to users or indirectly through roles and role groups, and are ultimately reflected in the user's access tokens.
+
+---
+## Core Concepts
+
+### Resource
+A **Resource** represents a protected entity (for example, an API or service) that enforces access control.
+Each resource is uniquely identified by its **audience** (`aud`) parameter.
+
+A resource also defines:
+- Which **Clients (Applications)** are allowed to request tokens for it.
+- Which **Permissions** are available within that resource.
+
+Permissions are always defined **per resource**.
+When managing permissions in the dashboard, you can select the active resource from the **top-left dropdown** in the **Permission Graph view**.
+
+---
+
+### Permission
+A **Permission** represents a specific action or capability within a resource (for example, `read:user`, `update:profile`, `delete:post`).
+Permissions are assigned:
+- Directly to **users**, or
+- Indirectly via **roles** and **role groups**.
+
+The effective permissions granted to a user determine which permissions(scopes) will appear in their access token.
+
+---
+
+### Role
+A **Role** is a named collection of permissions within a resource.
+Roles simplify permission management by grouping related permissions together (e.g., `admin`, `editor`, `viewer`).
+
+Roles can:
+- Contain multiple **permissions**.
+- Be assigned to **users**.
+- Be assigned to **role groups**.
+- Be configured to **auto-assign** to new users during signup.
+
+---
+
+### Role Group
+A **Role Group** is a higher-level container that groups multiple roles together.
+Assigning a role group to a user effectively grants all permissions contained in the included roles.
+
+Like roles, role groups can also be configured for **automatic assignment** upon user creation.
+
+---
+
+## Access Control Flow
+
+The permission resolution process in PlusAuth occurs through a series of ordered stages.
+When a client requests access to a resource, PlusAuth evaluates the client’s authorization,
+gathers the user’s assigned permissions, and progressively expands them through roles and role groups.
+These permissions are then merged, filtered according to the resource–client policy, and finalized as the effective set of permissions embedded in the access token.
+
+The table below summarizes the stages of PlusAuth’s permission resolution process.
+
+| Stage                           | Description                                                 |
+|---------------------------------|-------------------------------------------------------------|
+| **Client requests access**      | Client asks for access to a specific resource (`audience`). |
+| **Resource defines policy**     | Determines which clients and permissions are valid.         |
+| **User permissions gathered**   | Collect direct, role, and role-group permissions.           |
+| **Roles and groups expanded**   | Resolve indirect assignments into explicit permissions.     |
+| **Permissions merged**          | Combine all user permissions per resource.                  |
+| **Filtered by resource-client** | Keep only permissions allowed for that client.              |
+| **Final**                       | Final permissions are retrieved.                            |
+
+
+The following diagram illustrates how these stages interact in practice.
 
 {% mermaid %}
 ``` {% process=false %}
@@ -82,7 +151,7 @@ flowchart TB
 Every request starts when a **Client (Application)** asks for access to a **Resource**, identified by its `audience`.
 Each resource defines:
 
-* Which clients are allowed to request tokens for it, and
+* Which clients are allowed to request tokens for it
 * Which permissions those clients are allowed to use.
 
 This establishes the *access boundary* for the rest of the process.
@@ -120,17 +189,5 @@ Any permission outside the client–resource's allowed list is discarded, even i
 
 The resulting intersection of permissions becomes the **effective scopes** for this authentication context.
 These are embedded into the user's access token.
-
-
-| Stage                           | Description                                                 |
-|---------------------------------|-------------------------------------------------------------|
-| **Client requests access**      | Client asks for access to a specific resource (`audience`). |
-| **Resource defines policy**     | Determines which clients and permissions are valid.         |
-| **User permissions gathered**   | Collect direct, role, and role-group permissions.           |
-| **Roles and groups expanded**   | Resolve indirect assignments into explicit permissions.     |
-| **Permissions merged**          | Combine all user permissions per resource.                  |
-| **Filtered by resource-client** | Keep only permissions allowed for that client.              |
-| **Final**                       | Final permissions are retrieved.                            |
-
 
 This model allows PlusAuth to provide granular, resource-based access control that scales from simple role-based setups to complex multi-resource permission hierarchies.

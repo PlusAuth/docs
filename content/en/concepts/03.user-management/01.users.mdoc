@@ -1,0 +1,89 @@
+---
+title: "Users"
+meta_title: "Manage users in PlusAuth"
+meta_description: "Learn more about user management and additional functionality about users."
+keywords:
+  - concepts
+  - plusauth
+  - users
+  - user management
+  - user metadata
+
+---
+
+Each user in PlusAuth is represented by a **comprehensive and extensible user object**.
+It contains core identity attributes, authentication credentials, connected identities, profile information, and customizable metadata.
+This schema powers user management in the dashboard and the `/users` API endpoints.
+
+## Manage Users
+You can manage users in PlusAuth through either the Dashboard or the [Core REST API](/api/core), depending on your workflow and automation needs.
+
+### Dashboard
+Navigate to [Dashboard > Users](https://dashboard.plusauth.com/#users) to access the user management panel.
+From here, you can:
+
+- Create new users manually.
+- Edit user attributes, profile details, and metadata.
+- Assign or remove roles, role groups, and permissions.
+- Block or delete accounts that should no longer have access.
+- View the user's linked identities, last login, and verification status.
+- Perform administrative actions such as resetting passwords or resetting MFA credentials.
+
+All changes made here take effect immediately and propagate through your tenant.
+
+### REST API
+You can also perform all user management operations programmatically via the [Users API Endpoints](/api/core/-/users/assign-permissions-to-user).
+This is ideal for automation, integrations, or building your own admin UI.
+
+---
+
+## User Schema
+
+For the whole user profile please have a look at to [User Response Schema](/api/core/-/users/get-user#response-body-schema).
+
+### Core Attributes
+
+The core fields define the user's identity, state, and timestamps:
+
+* **`id`**, **`created_at`**, **`updated_at`** – immutable identifiers and lifecycle timestamps.
+* **`username`**, **`email`** and **`phone_number`** – primary identifiers, with supporting verification flags (`email_verified`, `phone_number_verified`).
+* **`blocked`** – when `true`, the user is prevented from authenticating.
+* **`last_login`** and **`login_attempts`** – audit and security indicators used by PlusAuth to enforce throttling and account protection.
+
+### Profile
+
+The **`profile`** object follows the [OpenID Connect Standard Claims](https://openid.net/specs/openid-connect-core-1_0.html#StandardClaims), extending the user with human-readable and locale-aware information:
+
+* **Name fields**: `given_name`, `family_name`, `middle_name`, `nickname`, and `name`.
+* **Localization**: `locale` and `zoneinfo` determine language and time zone preferences.
+* **Personal details**: `birthdate`, `gender`, `website`, and `profile_page`.
+* **Addresses**: structured under `profile.addresses[]`, allowing multiple entries (e.g., billing, delivery) with proper regional components.
+
+Profile fields are typically user-editable through self-service portals or administrative APIs.
+
+### Metadata
+
+The **`metadata`** object is a flexible, application-specific store for custom attributes such as preferences, attributes outside PlusAuth, or business data.
+It supports up to **10 keys**, with simple value types (`string`, `number`, `boolean`, or `null`).
+Metadata is entirely managed by your application and never modified by PlusAuth automatically.
+
+
+### Credentials and Identities
+
+The **`credentials`** array stores authentication credentials linked to the user, such as password hashes or WebAuthn keys.
+
+The **`identities`** array tracks **external or federated identities**, describing how the user authenticates via third-party providers.
+Each identity includes:
+
+* **`provider`** and **`connection`** – identify the external source (e.g., Google, LDAP, SMS).
+* **`type`** – defines the mechanism (`social`, `enterprise`, `email`, `sms`, etc.).
+* **`details`** – raw user data returned by the identity provider.
+
+This structure allows a single PlusAuth user to link multiple login methods (for example, social and enterprise credentials).
+
+---
+## Security and Access Control
+
+User objects integrate tightly with **PlusAuth's role and permission system**.
+Assignments such as roles, permissions, and role groups are managed separately, but they influence how the user's **effective scopes** appear in issued tokens.
+See [Access Control](/concepts/user-management/access-control) for more details.
