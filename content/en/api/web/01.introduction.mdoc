@@ -34,6 +34,7 @@ Here is an example response:
 {% /alert %}
 
 {% tabs %}
+
 ```javascript {% title="Fetch" frame="code" %}
 const result = await fetch("/signin", {
   method: "POST",
@@ -47,8 +48,8 @@ const result = await fetch("/signin", {
 
 if ( result.status === 400 && response.headers.get( 'content-type' ).includes('application/json') ){
   const parsedResponse = await result.json()
-  if ( parsedResponse.error === 'xhr_request' && parsedResponse.location ) {
-    window.location.replace( parsedResponse.location );
+  if (parsedResponse.error === 'xhr_request' && parsedResponse.location) {
+    window.location.replace(parsedResponse.location);
     return false;
   } else {
     // handle other errors
