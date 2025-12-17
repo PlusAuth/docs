@@ -191,19 +191,19 @@ app.get('/users', checkJwt('users:read'), function (req, res) {
 });
 
 // create user API endpoint (token requires users:write scope)
-app.post('/users', checkJwt('users:write'), function (req, res) {
+app.post('/users', checkJwt('users:write'), function(req, res) {
   //send the response
   res.status(200).send('New User Created');
 });
 
 // update user API endpoint (token requires users:update scope)
-app.put('/users', checkJwt('users:update'), function (req, res) {
+app.put('/users', checkJwt('users:update'), function(req, res) {
   //send the response
   res.status(200).send('User Updated');
 });
 
 // update user API endpoint (token requires users:delete scope)
-app.delete('/users', checkJwt('users:delete'), function (req, res) {
+app.delete('/users', checkJwt('users:delete'), function(req, res) {
     //send the response
     res.status(200).send('User Deleted');
   }
