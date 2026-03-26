@@ -2,34 +2,31 @@
   "name": "plusauth-docs",
   "version": "1.0.0",
   "description": "",
+  "keywords": [],
+  "license": "ISC",
+  "author": "",
   "type": "module",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "prepare": "husky"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "lint-staged": {
-    "*.{md,mdx}": "eslint"
-  },
   "devDependencies": {
-    "eslint": "^9.19.0",
-    "eslint-plugin-mdx": "^3.1.5",
+    "eslint": "^10.1.0",
+    "eslint-plugin-mdx": "^3.7.0",
     "husky": "^9.1.7",
-    "lint-staged": "^15.4.3",
+    "lint-staged": "^16.4.0",
     "remark-cli": "^12.0.1",
-    "remark-directive": "^3.0.1",
+    "remark-directive": "^4.0.0",
     "remark-frontmatter": "^5.0.0",
     "remark-lint-list-item-indent": "^4.0.1",
     "remark-preset-lint-consistent": "^6.0.1",
     "remark-preset-lint-recommended": "^7.0.1"
   },
+  "lint-staged": {
+    "*.{md,mdx}": "eslint"
+  },
   "remarkConfig": {
-    "settings": {
-      "bullet": "*"
-    },
     "plugins": [
       [
         "remark-frontmatter",
@@ -40,6 +37,9 @@
       "remark-directive",
       "remark-preset-lint-consistent",
       "remark-preset-lint-recommended"
-    ]
+    ],
+    "settings": {
+      "bullet": "*"
+    }
   }
 }
